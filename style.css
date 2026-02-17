@@ -1,0 +1,220 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Светлая тема */
+body.light {
+  background: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+}
+
+/* Тёмная тема */
+body.dark {
+  background: var(--tg-theme-bg-color, #1a1a1a);
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+/* ── Верхняя панель с кнопками глав ────────────────────────────── */
+.top-bar {
+  padding: 10px;
+  border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
+  background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+}
+
+body.dark .top-bar {
+  background: var(--tg-theme-secondary-bg-color, #2a2a2a);
+  border-bottom-color: var(--tg-theme-hint-color, #444);
+}
+
+.chapter-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.chapter-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--tg-theme-button-color, #3390ec);
+  background: transparent;
+  color: var(--tg-theme-button-color, #3390ec);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chapter-btn:hover {
+  background: var(--tg-theme-button-color, #3390ec);
+  color: var(--tg-theme-button-text-color, #ffffff);
+}
+
+.chapter-btn.active {
+  background: var(--tg-theme-button-color, #3390ec);
+  color: var(--tg-theme-button-text-color, #ffffff);
+  transform: scale(1.1);
+}
+
+/* ── Контент главы ─────────────────────────────────────────────── */
+#contentWrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  transition: opacity 0.3s, transform 0.3s;
+  -webkit-overflow-scrolling: touch;
+}
+
+#chapterContent {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Стили для текста главы */
+#chapterContent h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 28px;
+  color: var(--tg-theme-text-color, #000);
+}
+
+body.dark #chapterContent h1 {
+  color: var(--tg-theme-text-color, #fff);
+}
+
+#chapterContent h2 {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: var(--tg-theme-text-color, #000);
+}
+
+body.dark #chapterContent h2 {
+  color: var(--tg-theme-text-color, #fff);
+}
+
+#chapterContent p {
+  margin-bottom: 16px;
+  text-indent: 1.5em;
+  font-size: 16px;
+  text-align: justify;
+}
+
+#chapterContent hr {
+  margin: 40px 0;
+  border: none;
+  border-top: 1px solid var(--tg-theme-hint-color, #ccc);
+}
+
+body.dark #chapterContent hr {
+  border-top-color: var(--tg-theme-hint-color, #444);
+}
+
+/* ── Нижняя панель управления ─────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-top: 1px solid var(--tg-theme-hint-color, #ccc);
+  background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+}
+
+body.dark .controls {
+  background: var(--tg-theme-secondary-bg-color, #2a2a2a);
+  border-top-color: var(--tg-theme-hint-color, #444);
+}
+
+.page-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: var(--tg-theme-button-color, #3390ec);
+  color: var(--tg-theme-button-text-color, #ffffff);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+#chapterInfo {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--tg-theme-text-color, #000);
+}
+
+body.dark #chapterInfo {
+  color: var(--tg-theme-text-color, #fff);
+}
+
+/* ── Адаптивность ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #contentWrapper {
+    padding: 15px;
+  }
+  
+  #chapterContent h1 {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
+  
+  #chapterContent h2 {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+  
+  #chapterContent p {
+    font-size: 15px;
+  }
+  
+  .chapter-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+}
+
+/* Скрываем скроллбар, но оставляем прокрутку */
+#contentWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+#contentWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#contentWrapper::-webkit-scrollbar-thumb {
+  background: var(--tg-theme-hint-color, #ccc);
+  border-radius: 3px;
+}
+
+body.dark #contentWrapper::-webkit-scrollbar-thumb {
+  background: var(--tg-theme-hint-color, #555);
+}

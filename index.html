@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KROSS</title>
+<link rel="stylesheet" href="style.css">
+<!-- Telegram Mini App SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="top-bar">
+    <div class="chapter-buttons">
+      <button onclick="goToChapter(1)" class="chapter-btn">1</button>
+      <button onclick="goToChapter(2)" class="chapter-btn">2</button>
+      <button onclick="goToChapter(3)" class="chapter-btn">3</button>
+      <button onclick="goToChapter(4)" class="chapter-btn">4</button>
+      <button onclick="goToChapter(5)" class="chapter-btn">5</button>
+      <button onclick="goToChapter(6)" class="chapter-btn">6</button>
+      <button onclick="goToChapter(7)" class="chapter-btn">7</button>
+    </div>
+  </div>
+
+  <div id="contentWrapper">
+    <div id="chapterContent"></div>
+  </div>
+
+  <div class="controls">
+    <button id="prevChapter" class="page-btn">◀</button>
+    <span id="chapterInfo"></span>
+    <button id="nextChapter" class="page-btn">▶</button>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

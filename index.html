@@ -2,43 +2,44 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KROSS</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
 <body class="dark">
-
-<div class="app">
+<div class="container">
 
   <div class="top-bar">
-    <div class="app-title">KROSS</div>
     <button id="themeToggle">🌙</button>
   </div>
 
   <div class="chapter-buttons">
-    <button onclick="goToChapter(1)" class="chapter-btn" data-chapter="1">1</button>
-    <button onclick="goToChapter(2)" class="chapter-btn" data-chapter="2">2</button>
-    <button onclick="goToChapter(3)" class="chapter-btn" data-chapter="3">3</button>
-    <button onclick="goToChapter(4)" class="chapter-btn" data-chapter="4">4</button>
-    <button onclick="goToChapter(5)" class="chapter-btn" data-chapter="5">5</button>
-    <button onclick="goToChapter(6)" class="chapter-btn" data-chapter="6">6</button>
-    <button onclick="goToChapter(7)" class="chapter-btn" data-chapter="7">7</button>
+    <button onclick="goToChapter(1)" class="chapter-btn">1</button>
+    <button onclick="goToChapter(2)" class="chapter-btn">2</button>
+    <button onclick="goToChapter(3)" class="chapter-btn">3</button>
+    <button onclick="goToChapter(4)" class="chapter-btn">4</button>
+    <button onclick="goToChapter(5)" class="chapter-btn">5</button>
+    <button onclick="goToChapter(6)" class="chapter-btn">6</button>
+    <button onclick="goToChapter(7)" class="chapter-btn">7</button>
   </div>
 
-  <div id="scrollContainer">
-    <div id="pagesInner"></div>
+  <div id="canvasWrapper">
+    <div id="pageContainer">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="textLayer" class="textLayer"></div>
+    </div>
   </div>
 
-  <div class="bottom-bar">
-    <button id="prevPage" class="page-btn">← Назад</button>
-    <span id="pageInfo">Загрузка…</span>
-    <button id="nextPage" class="page-btn">Вперёд →</button>
+  <div class="controls">
+    <button id="prevPage" class="page-btn">Назад</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage" class="page-btn">Вперёд</button>
   </div>
 
 </div>
-
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KROSS — читалка</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-beige">
+    <div class="app">
+        <header class="book-header">
+            <h1>KROSS</h1>
+            <div class="subtitle">часть 1</div>
+            <!-- Кнопки глав теперь прямо под subtitle -->
+            <div class="chapter-nav">
+                <button class="chapter-btn" data-chapter="0">1</button>
+                <button class="chapter-btn" data-chapter="1">2</button>
+                <button class="chapter-btn" data-chapter="2">3</button>
+                <button class="chapter-btn" data-chapter="3">4</button>
+                <button class="chapter-btn" data-chapter="4">5</button>
+                <button class="chapter-btn" data-chapter="5">6</button>
+                <button class="chapter-btn" data-chapter="6">7</button>
+            </div>
+            <!-- Автор и описание – теперь отдельный блок под кнопками -->
+            <div class="author-info">
+                <div class="author">Автор: Катя Ким</div>
+                <div class="description">
+                    На крупнейшем танцевальном российском чемпионате происходит трагедия, при которой один из участников известной провинциальной команды погибает прямо на сцене во время выступления от рук своих товарищей. Лидер коллектива, двадцатилетний Никита Аннинский, восстанавливает череду событий, предшествующих убийству.
+                </div>
+            </div>
+        </header>
+
+        <!-- Контейнер для страниц с горизонтальным скроллом (перелистывание) -->
+        <div class="pages-container" id="pagesContainer">
+            <div class="page" id="page1"></div>
+            <div class="page" id="page2"></div>
+            <!-- Динамически будут добавляться/удаляться страницы, но проще через смену содержимого -->
+        </div>
+
+        <!-- Индикатор страниц -->
+        <div class="page-indicator" id="pageIndicator">1 / 10</div>
+
+        <!-- Кнопка смены темы внизу по центру -->
+        <div class="theme-footer">
+            <button class="theme-toggle" id="themeToggle" aria-label="Сменить тему">🌙</button>
+        </div>
+    </div>
+    <script src="chapters.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -5,144 +5,109 @@
 }
 
 body {
-    font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 16px;
-    line-height: 1.7;
-    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Georgia', serif;
+    background: #e8d8c0;
     height: 100vh;
-    overflow: hidden;
-    background-color: #e8d8c0; /* фон под «бумагу» */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Книжный эффект */
 .app {
+    width: 100%;
     max-width: 600px;
-    margin: 10px auto;
-    height: calc(100vh - 20px);
+    height: 95vh;
+    background: #faf0e6;
+    border-radius: 30px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
-    background-color: inherit;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     overflow: hidden;
     position: relative;
 }
 
-/* Тема бежевая (дневная) */
+/* темы */
 .theme-beige {
-    background-color: #faf0e6;
+    background: #faf0e6;
     color: #3e2c1b;
 }
-.theme-beige .pages-container {
-    background-color: #fff9f0;
+.theme-beige .reader {
+    background: #fff9f0;
 }
-.theme-beige .chapter-btn {
-    background-color: #d8c8b8;
-    color: #3e2c1b;
-}
-.theme-beige .chapter-btn.active {
-    background-color: #b39274;
-    color: white;
-}
-
-/* Тема коричневая (ночная) */
 .theme-brown {
-    background-color: #4a3729;
+    background: #4a3729;
     color: #f0e0c0;
 }
-.theme-brown .pages-container {
-    background-color: #5e4b3a;
+.theme-brown .reader {
+    background: #5e4b3a;
     color: #f5e6d3;
 }
-.theme-brown .chapter-btn {
-    background-color: #7f6248;
-    color: #ffe6cc;
-}
-.theme-brown .chapter-btn.active {
-    background-color: #3b2b1e;
-    box-shadow: 0 0 0 2px #d4a373;
-    color: #fff2e0;
-}
 
-/* Шапка */
-.book-header {
-    padding: 12px 20px 8px;
+/* шапка */
+.header {
+    padding: 15px 20px 5px;
     border-bottom: 1px solid rgba(0,0,0,0.1);
     flex-shrink: 0;
-    background-color: inherit;
-    z-index: 10;
 }
 
 .header-top {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 4px;
+    align-items: center;
 }
 
-.header-top h1 {
-    font-size: 2.2rem;
+h1 {
+    font-size: 2.5rem;
     font-weight: bold;
     letter-spacing: 2px;
-    line-height: 1;
 }
 
-.theme-toggle {
+.theme-btn {
     background: none;
     border: none;
     font-size: 2rem;
     cursor: pointer;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: inherit;
-    transition: opacity 0.2s;
-}
-
-.theme-toggle:hover {
-    opacity: 0.7;
+    padding: 0;
+    width: 50px;
+    height: 50px;
 }
 
 .subtitle {
     font-size: 1rem;
     opacity: 0.8;
-    margin-bottom: 10px;
+    margin: 5px 0 10px;
     font-style: italic;
 }
 
-/* Блок автора и описания (со сворачиванием) */
-.author-info {
-    margin: 5px 0 10px;
+.author-block {
     position: relative;
-    padding-right: 30px; /* место для стрелки */
+    margin: 10px 0 15px;
+    padding-right: 30px;
 }
 
 .author {
     font-weight: 600;
-    margin-bottom: 4px;
-    font-size: 0.95rem;
+    margin-bottom: 3px;
 }
 
-.description {
-    font-style: italic;
-    text-align: justify;
+.desc {
     font-size: 0.9rem;
     line-height: 1.4;
     opacity: 0.85;
-    transition: max-height 0.3s ease, margin 0.3s ease;
+    text-align: justify;
+    transition: max-height 0.3s, opacity 0.2s;
+    max-height: 100px;
     overflow: hidden;
-    max-height: 100px; /* достаточно для 3-4 строк */
 }
 
-.description.collapsed {
+.desc.collapsed {
     max-height: 0;
-    margin: 0;
     opacity: 0;
+    margin: 0;
 }
 
-.toggle-description {
+.toggle-desc {
     position: absolute;
     right: 0;
     top: 0;
@@ -152,155 +117,89 @@ body {
     cursor: pointer;
     color: inherit;
     opacity: 0.6;
-    padding: 4px;
-    line-height: 1;
 }
 
-.toggle-description:hover {
-    opacity: 1;
-}
-
-/* Кнопки глав (маленькие, круглые) */
-.chapter-nav {
+.chapters {
     display: flex;
-    justify-content: center;
     gap: 8px;
+    justify-content: center;
     margin: 10px 0 5px;
     flex-wrap: wrap;
 }
 
-.chapter-btn {
-    width: 36px;
-    height: 36px;
+.chap {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
-    font-weight: bold;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    background-color: #d8c8b8;
+    background: #d8c8b8;
     color: #3e2c1b;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: 0.2s;
+}
+
+.chap.active {
+    background: #b39274;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* читалка */
+.reader {
+    flex: 1;
+    margin: 0 15px 10px;
+    border-radius: 15px;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    scroll-behavior: smooth;
+}
+
+.reader p {
+    margin-bottom: 1.2em;
+    text-indent: 1.5em;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+/* футер */
+.footer {
+    text-align: center;
+    padding: 10px 0 15px;
+    position: relative;
     flex-shrink: 0;
 }
 
-.chapter-btn.active {
-    transform: scale(1.1);
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    background-color: #b39274;
+.page-num {
+    background: rgba(0,0,0,0.6);
     color: white;
-}
-
-/* Контейнер страниц (вертикальный свайп) */
-.pages-container {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    background-color: inherit;
-    margin: 0 10px;
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
-}
-
-/* Страница (одна) */
-.page {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    padding: 20px 25px 20px 20px;
-    background-color: inherit;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease-in-out;
-    will-change: transform;
-    border-radius: 12px;
-}
-
-/* Стили текста – абзацы с отступами как в книге */
-.page p {
-    margin-bottom: 1.2em;
-    text-indent: 1.5em;
-    word-wrap: break-word;
-    font-size: 1rem;
-    line-height: 1.8;
-}
-
-.page p:first-of-type {
-    margin-top: 0;
-}
-
-/* Индикатор страниц – внизу по центру */
-.page-indicator {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 6px 16px;
-    border-radius: 30px;
+    padding: 6px 18px;
+    border-radius: 40px;
+    display: inline-block;
     font-size: 0.9rem;
     font-weight: bold;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    z-index: 30;
+    backdrop-filter: blur(2px);
 }
 
-/* Подсказка */
 .hint {
     position: absolute;
-    bottom: 100px;
+    top: -40px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0,0,0,0.7);
     color: white;
     padding: 8px 20px;
     border-radius: 40px;
     font-size: 1rem;
-    font-weight: 500;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.3);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 40;
+    white-space: nowrap;
+    backdrop-filter: blur(2px);
     transition: opacity 0.3s;
     pointer-events: none;
 }
 
 .hint.hidden {
     opacity: 0;
-}
-
-/* Анимация перехода страниц */
-.page-enter {
-    transform: translateY(100%);
-}
-.page-enter-active {
-    transform: translateY(0);
-}
-.page-exit {
-    transform: translateY(0);
-}
-.page-exit-active {
-    transform: translateY(-100%);
-}
-
-/* Адаптация для маленьких экранов */
-@media (max-width: 400px) {
-    .chapter-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 0.8rem;
-    }
-    .header-top h1 {
-        font-size: 1.8rem;
-    }
-    .theme-toggle {
-        font-size: 1.8rem;
-        width: 40px;
-        height: 40px;
-    }
 }

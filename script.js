@@ -1,30 +1,27 @@
-// Состояние
-let currentChapter = 0;
-let currentPage = 0;
-let pages = [];
+// Состояние приложения
+let currentChapter = 0;          // индекс главы (0-6)
+let currentPage = 0;             // индекс страницы в текущей главе
+let pages = [];                  // массив фрагментов текста для текущей главы
 let totalPages = 0;
-let isFirstSwipe = true; // для подсказки
 
-// Элементы
-const currentPageEl = document.getElementById('currentPage');
-const nextPageEl = document.getElementById('nextPage');
+// Элементы DOM
+const pagesContainer = document.getElementById('pagesContainer');
 const pageIndicator = document.getElementById('pageIndicator');
-const chapterPanel = document.getElementById('chapterPanel');
-const menuToggle = document.getElementById('menuToggle');
+const hint = document.getElementById('hint');
+const chapterButtons = document.querySelectorAll('.chapter-btn');
 const themeToggle = document.getElementById('themeToggle');
-const authorInfo = document.getElementById('authorInfo');
 const toggleDesc = document.getElementById('toggleDesc');
-const swipeHint = document.getElementById('swipeHint');
+const description = document.querySelector('.description');
 
-let touchStartY = 0;
-let isSwiping = false;
+// Текущая страница (DOM-элемент)
+let currentPageElement = null;
 
-// --- Загрузка/сохранение (аналогично предыдущему, добавим состояние свёрнутости) ---
+// --- Загрузка сохранённых данных ---
 function loadSaved() {
     const saved = localStorage.getItem('kross_reader');
     if (saved) {
         try {
-            const { chapter, page, theme, descCollapsed } = JSON.parse(saved);
+            const { chapter, page, theme, descCollapsed, hintShown } = JSON.parse(saved);
             if (chapter >= 0 && chapter < chapters.length) {
                 currentChapter = chapter;
                 currentPage = page;
@@ -33,181 +30,235 @@ function loadSaved() {
                 document.body.classList.remove('theme-beige');
                 document.body.classList.add('theme-brown');
                 themeToggle.textContent = '☀️';
+            } else {
+                document.body.classList.add('theme-beige');
+                themeToggle.textContent = '🌙';
             }
             if (descCollapsed) {
-                authorInfo.classList.add('collapsed');
+                description.classList.add('collapsed');
                 toggleDesc.textContent = '▼';
             } else {
-                authorInfo.classList.remove('collapsed');
+                description.classList.remove('collapsed');
                 toggleDesc.textContent = '▲';
             }
-        } catch (e) {}
+            if (hintShown) {
+                hint.classList.add('hidden');
+            }
+        } catch (e) {
+            console.warn('Ошибка загрузки сохранения', e);
+        }
     }
 }
 
+// --- Сохранение текущей позиции ---
 function saveProgress() {
     const theme = document.body.classList.contains('theme-brown') ? 'brown' : 'beige';
-    const descCollapsed = authorInfo.classList.contains('collapsed');
+    const descCollapsed = description.classList.contains('collapsed');
+    const hintShown = hint.classList.contains('hidden');
     localStorage.setItem('kross_reader', JSON.stringify({
         chapter: currentChapter,
         page: currentPage,
         theme: theme,
-        descCollapsed: descCollapsed
+        descCollapsed: descCollapsed,
+        hintShown: hintShown
     }));
 }
 
-// --- Разбиение на страницы (адаптивное) ---
+// --- Динамическое разбиение текста на страницы ---
 function splitIntoPages(text) {
-    // используем временный div как раньше, но учитываем высоту контейнера страницы
     const tempDiv = document.createElement('div');
+    tempDiv.className = 'page';
     tempDiv.style.cssText = `
         position: absolute;
         visibility: hidden;
-        width: ${currentPageEl.clientWidth}px;
-        padding: 20px;
+        width: ${pagesContainer.clientWidth}px;
+        padding: 20px 25px 20px 20px;
         font-size: 1rem;
         line-height: 1.8;
-        font-family: Georgia, serif;
+        font-family: Georgia, 'Times New Roman', serif;
+        white-space: normal;
+        word-wrap: break-word;
+        left: 0;
+        top: 0;
     `;
     document.body.appendChild(tempDiv);
+
     const paragraphs = text.split(/\n\s*\n/);
     const pages = [];
-    let currentText = '';
-    let currentHeight = 0;
-    const maxHeight = currentPageEl.clientHeight;
+    let currentPageText = '';
+    let currentPageHeight = 0;
+    const maxHeight = pagesContainer.clientHeight;
 
     paragraphs.forEach(para => {
-        const clean = para.replace(/\s+/g, ' ').trim();
-        if (!clean) return;
+        const cleanPara = para.replace(/\s+/g, ' ').trim();
+        if (!cleanPara) return;
+
         const p = document.createElement('p');
-        p.textContent = clean;
+        p.textContent = cleanPara;
         tempDiv.appendChild(p);
-        const h = p.offsetHeight;
+        const paraHeight = p.offsetHeight;
         tempDiv.removeChild(p);
 
-        if (currentHeight + h > maxHeight && currentText !== '') {
-            pages.push(currentText);
-            currentText = clean + '\n\n';
-            currentHeight = h;
+        if (currentPageHeight + paraHeight > maxHeight && currentPageText !== '') {
+            pages.push(currentPageText);
+            currentPageText = cleanPara + '\n\n';
+            currentPageHeight = paraHeight;
         } else {
-            currentText += clean + '\n\n';
-            currentHeight += h;
+            currentPageText += cleanPara + '\n\n';
+            currentPageHeight += paraHeight;
         }
     });
-    if (currentText) pages.push(currentText);
+
+    if (currentPageText) {
+        pages.push(currentPageText);
+    }
+
     document.body.removeChild(tempDiv);
     return pages;
 }
 
-// --- Отрисовка страницы ---
-function renderPage() {
+// --- Создание DOM-элемента страницы ---
+function createPageElement(text) {
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'page';
+    const paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
+    const html = paragraphs.map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('');
+    pageDiv.innerHTML = html;
+    return pageDiv;
+}
+
+// --- Отображение страницы с вертикальной анимацией ---
+function renderPage(direction = 'next') {
     if (!pages.length) {
-        currentPageEl.innerHTML = '<p>Загрузка...</p>';
+        pagesContainer.innerHTML = '<div class="page"><p>Загрузка...</p></div>';
         pageIndicator.textContent = '0 / 0';
         return;
     }
-    const pageText = pages[currentPage];
-    const paragraphs = pageText.split('\n\n').filter(p => p.trim());
-    currentPageEl.innerHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('');
-    pageIndicator.textContent = `${currentPage+1} / ${totalPages}`;
-    saveProgress();
 
-    // Скрываем подсказку после первого свайпа
-    if (isFirstSwipe) {
-        swipeHint.classList.add('hint-hidden');
-        isFirstSwipe = false;
+    const newPageElement = createPageElement(pages[currentPage]);
+
+    if (!currentPageElement) {
+        // Первый запуск
+        pagesContainer.innerHTML = '';
+        currentPageElement = newPageElement;
+        pagesContainer.appendChild(currentPageElement);
+    } else {
+        const oldPage = currentPageElement;
+        const newPage = newPageElement;
+
+        const startTransform = direction === 'next' ? 'translateY(100%)' : 'translateY(-100%)';
+        const endTransform = direction === 'next' ? 'translateY(-100%)' : 'translateY(100%)';
+
+        oldPage.style.transition = 'transform 0.3s ease-in-out';
+        newPage.style.transition = 'transform 0.3s ease-in-out';
+        newPage.style.transform = startTransform;
+
+        pagesContainer.appendChild(newPage);
+
+        requestAnimationFrame(() => {
+            oldPage.style.transform = endTransform;
+            newPage.style.transform = 'translateY(0)';
+        });
+
+        setTimeout(() => {
+            if (pagesContainer.contains(oldPage)) {
+                pagesContainer.removeChild(oldPage);
+            }
+            oldPage.style.transition = '';
+            newPage.style.transition = '';
+            currentPageElement = newPage;
+        }, 300);
     }
+
+    pageIndicator.textContent = `${currentPage + 1} / ${totalPages}`;
+    saveProgress();
 }
 
-// --- Загрузка главы ---
+// --- Загрузить главу ---
 function loadChapter(index) {
-    if (index === currentChapter && pages.length) {
-        renderPage();
+    if (index === currentChapter && pages.length > 0) {
+        // Уже загружена, просто обновляем отображение страницы
+        if (currentPageElement) {
+            pagesContainer.innerHTML = '';
+            currentPageElement = createPageElement(pages[currentPage]);
+            pagesContainer.appendChild(currentPageElement);
+        } else {
+            renderPage();
+        }
         return;
     }
+
     currentChapter = index;
     currentPage = 0;
     const fullText = chapters[index].text;
+
+    pagesContainer.innerHTML = '';
+    currentPageElement = null;
+
     setTimeout(() => {
         pages = splitIntoPages(fullText);
         totalPages = pages.length;
         renderPage();
-        // Обновить активную кнопку главы
-        document.querySelectorAll('.chapter-btn').forEach((btn, i) => {
+
+        chapterButtons.forEach((btn, i) => {
             btn.classList.toggle('active', i === index);
         });
     }, 50);
 }
 
 // --- Обработка вертикального свайпа ---
-currentPageEl.addEventListener('touchstart', (e) => {
+let touchStartY = 0;
+let touchEndY = 0;
+let isSwiping = false;
+
+pagesContainer.addEventListener('touchstart', (e) => {
     touchStartY = e.touches[0].clientY;
     isSwiping = true;
 }, { passive: true });
 
-currentPageEl.addEventListener('touchmove', (e) => {
+pagesContainer.addEventListener('touchmove', (e) => {
     if (!isSwiping) return;
-    e.preventDefault(); // предотвращаем стандартный скролл страницы во время свайпа
-}, { passive: false });
+    touchEndY = e.touches[0].clientY;
+}, { passive: true });
 
-currentPageEl.addEventListener('touchend', (e) => {
+pagesContainer.addEventListener('touchend', (e) => {
     if (!isSwiping) return;
-    const diff = e.changedTouches[0].clientY - touchStartY;
-    const threshold = 40;
+    const threshold = 50;
+    const diff = touchEndY - touchStartY;
+
+    // Скрываем подсказку при первом свайпе
+    if (!hint.classList.contains('hidden')) {
+        hint.classList.add('hidden');
+        saveProgress();
+    }
 
     if (Math.abs(diff) > threshold) {
         if (diff < 0 && currentPage < totalPages - 1) {
-            // свайп вверх -> следующая
-            animatePageTransition('up');
+            // свайп вверх -> следующая страница
             currentPage++;
-            setTimeout(() => renderPage(), 150); // даём время на анимацию
+            renderPage('next');
         } else if (diff > 0 && currentPage > 0) {
-            // свайп вниз -> предыдущая
-            animatePageTransition('down');
+            // свайп вниз -> предыдущая страница
             currentPage--;
-            setTimeout(() => renderPage(), 150);
+            renderPage('prev');
         }
     }
+
     isSwiping = false;
+    touchStartY = 0;
+    touchEndY = 0;
 }, { passive: true });
 
-function animatePageTransition(direction) {
-    const offset = direction === 'up' ? '-100%' : '100%';
-    currentPageEl.style.transition = 'transform 0.2s ease';
-    currentPageEl.style.transform = `translateY(${offset})`;
-    setTimeout(() => {
-        currentPageEl.style.transition = '';
-        currentPageEl.style.transform = '';
-    }, 200);
-}
-
-// --- Кнопка меню (показать/скрыть главы) ---
-menuToggle.addEventListener('click', () => {
-    chapterPanel.classList.toggle('visible');
-});
-
 // --- Кнопки глав ---
-document.querySelectorAll('.chapter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.dataset.chapter);
+chapterButtons.forEach((btn, idx) => {
+    btn.addEventListener('click', () => {
         loadChapter(idx);
-        chapterPanel.classList.remove('visible'); // скрыть панель после выбора
+        // Скрываем подсказку при любом взаимодействии
+        if (!hint.classList.contains('hidden')) {
+            hint.classList.add('hidden');
+            saveProgress();
+        }
     });
-});
-
-// --- Сворачивание описания ---
-toggleDesc.addEventListener('click', () => {
-    authorInfo.classList.toggle('collapsed');
-    toggleDesc.textContent = authorInfo.classList.contains('collapsed') ? '▼' : '▲';
-    saveProgress();
-    // Пересчитать страницы, так как изменилась доступная высота
-    if (chapters[currentChapter]) {
-        const fullText = chapters[currentChapter].text;
-        pages = splitIntoPages(fullText);
-        totalPages = pages.length;
-        currentPage = Math.min(currentPage, totalPages - 1);
-        renderPage();
-    }
 });
 
 // --- Переключение темы ---
@@ -216,7 +267,8 @@ themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('theme-brown');
     themeToggle.textContent = document.body.classList.contains('theme-brown') ? '☀️' : '🌙';
     saveProgress();
-    // Пересчитать страницы (шрифт мог измениться)
+
+    // Пересчёт страниц при смене темы
     if (chapters[currentChapter]) {
         const fullText = chapters[currentChapter].text;
         pages = splitIntoPages(fullText);
@@ -224,6 +276,37 @@ themeToggle.addEventListener('click', () => {
         currentPage = Math.min(currentPage, totalPages - 1);
         renderPage();
     }
+});
+
+// --- Сворачивание/разворачивание описания ---
+toggleDesc.addEventListener('click', () => {
+    description.classList.toggle('collapsed');
+    toggleDesc.textContent = description.classList.contains('collapsed') ? '▼' : '▲';
+    saveProgress();
+
+    // Пересчёт страниц, так как изменилась доступная высота
+    if (chapters[currentChapter]) {
+        const fullText = chapters[currentChapter].text;
+        pages = splitIntoPages(fullText);
+        totalPages = pages.length;
+        currentPage = Math.min(currentPage, totalPages - 1);
+        renderPage();
+    }
+});
+
+// --- Обработка изменения размера окна ---
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (chapters[currentChapter]) {
+            const fullText = chapters[currentChapter].text;
+            pages = splitIntoPages(fullText);
+            totalPages = pages.length;
+            currentPage = Math.min(currentPage, totalPages - 1);
+            renderPage();
+        }
+    }, 150);
 });
 
 // --- Инициализация ---

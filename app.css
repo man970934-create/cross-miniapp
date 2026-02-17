@@ -1,0 +1,69 @@
+:root{
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%;margin:0}
+body{background:#0b0b0f;color:#e9e9f2;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+
+.app{height:100%;display:flex;flex-direction:column}
+.topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand .title{font-weight:700;letter-spacing:.3px}
+.brand .subtitle{opacity:.7;font-size:12px;margin-top:2px}
+.picker{display:flex;align-items:center;gap:8px}
+.label{font-size:12px;opacity:.7}
+.select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#e9e9f2;border-radius:10px;padding:8px 10px;outline:none}
+.content{flex:1;min-height:0}
+
+.reader{height:100%;display:flex;min-height:0}
+.viewerWrap{flex:1;display:flex;flex-direction:column;min-height:0}
+
+.readerTop{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.readerBottom{display:flex;gap:10px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+
+.viewer{flex:1;min-height:0}
+
+.btn,.wideBtn,.iconBtn{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:inherit;
+  border-radius:12px;
+  padding:8px 12px;
+  cursor:pointer;
+}
+.btn:hover,.wideBtn:hover,.iconBtn:hover{background:rgba(255,255,255,.10)}
+.wideBtn{flex:1}
+.iconBtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1}
+
+.menu{
+  width:320px;
+  max-width:85vw;
+  background:#0f0f16;
+  border-right:1px solid rgba(255,255,255,.08);
+  transform:translateX(-100%);
+  transition:transform .2s ease;
+  position:absolute;
+  z-index:10;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+.menu.open{transform:translateX(0)}
+.menuHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.menuTitle{font-weight:700}
+
+.menuControls{padding:12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.controlRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.controlLabel{font-size:12px;opacity:.7}
+.segmented{display:flex;border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden}
+.segmented button{background:transparent;border:0;color:inherit;padding:6px 10px;cursor:pointer}
+.segmented button.active{background:rgba(255,255,255,.10)}
+
+.toc{padding:10px 12px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.tocItem{width:100%;text-align:left}
+
+.muted{opacity:.7;font-size:12px}
+.ellipsis{max-width:40vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{flex:1}
+
+/* light mode outer chrome */
+.reader.light, body.light{background:#fff;color:#12121a}

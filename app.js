@@ -1,162 +1,125 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-/* ── CONFIG ──────────────────────────────────── */
-const CHAPTER_STARTS = {
-  1:  1,
-  2:  16,
-  3:  31,
-  4:  46,
-  5:  61,
-  6:  76,
-  7:  91,
-};
-const RENDER_SCALE = 1.8; // higher = crisper on mobile retina
-
-/* ── STATE ───────────────────────────────────── */
-let pdfDoc     = null;
-let totalPages = 0;
+let pdfDoc    = null;
 let currentPage = 1;
-let rendering  = false;
+let totalPages  = 0;
+let renderTask  = null; // для отмены незавершённого рендера
 
-/* ── DOM REFS ────────────────────────────────── */
-const scrollContainer = document.getElementById("scrollContainer");
-const pagesInner      = document.getElementById("pagesInner");
-const pageInfo        = document.getElementById("pageInfo");
-const prevBtn         = document.getElementById("prevPage");
-const nextBtn         = document.getElementById("nextPage");
+const canvas      = document.getElementById("pdfCanvas");
+const ctx         = canvas.getContext("2d");
+const wrapper     = document.getElementById("canvasWrapper");
+const textLayerDiv = document.getElementById("textLayer");
 
-/* ── THEME ───────────────────────────────────── */
-const savedTheme = localStorage.getItem("theme") || "dark";
-document.body.className = savedTheme;
-updateThemeIcon();
+const chapterStartPages = {
+  1: 1,
+  2: 16,
+  3: 31,
+  4: 46,
+  5: 61,
+  6: 76,
+  7: 91
+};
 
-document.getElementById("themeToggle").addEventListener("click", () => {
-  const isDark = document.body.classList.contains("dark");
-  document.body.classList.toggle("dark",  !isDark);
-  document.body.classList.toggle("light",  isDark);
-  localStorage.setItem("theme", isDark ? "light" : "dark");
-  updateThemeIcon();
-});
+function renderPage(num) {
+  wrapper.style.opacity   = "0";
+  wrapper.style.transform = "translateX(20px)";
 
-function updateThemeIcon() {
-  const btn = document.getElementById("themeToggle");
-  btn.textContent = document.body.classList.contains("dark") ? "🌙" : "☀️";
+  // Отменяем предыдущий рендер, если ещё не завершился
+  if (renderTask) {
+    renderTask.cancel();
+    renderTask = null;
+  }
+
+  setTimeout(() => {
+    pdfDoc.getPage(num).then((page) => {
+      const scale    = 1.4;
+      const viewport = page.getViewport({ scale });
+
+      // Размер canvas под страницу
+      canvas.height = viewport.height;
+      canvas.width  = viewport.width;
+
+      // Текстовый слой точно совпадает с canvas
+      textLayerDiv.style.width  = viewport.width  + "px";
+      textLayerDiv.style.height = viewport.height + "px";
+      textLayerDiv.innerHTML = ""; // очищаем предыдущую страницу
+
+      // 1. Рендерим графику
+      renderTask = page.render({ canvasContext: ctx, viewport });
+
+      renderTask.promise.then(() => {
+        renderTask = null;
+
+        // 2. Рендерим текстовый слой поверх
+        return page.getTextContent({
+          includeMarkedContent: true, // сохраняем структуру абзацев
+          disableNormalization: false
+        });
+
+      }).then((textContent) => {
+        pdfjsLib.renderTextLayer({
+          textContentSource: textContent,
+          container: textLayerDiv,
+          viewport: viewport,
+          textDivs: [],
+          enhanceTextSelection: true, // улучшенное выделение
+        });
+
+        // Обновляем UI
+        document.getElementById("pageInfo").innerText =
+          `Страница ${num} из ${totalPages}`;
+        localStorage.setItem("savedPage", num);
+        updateCurrentChapter(num);
+
+        wrapper.style.opacity   = "1";
+        wrapper.style.transform = "translateX(0)";
+
+      }).catch((err) => {
+        if (err?.name !== "RenderingCancelledException") {
+          console.error("Ошибка рендера:", err);
+        }
+      });
+    });
+  }, 150);
 }
 
-/* ── LOAD PDF ────────────────────────────────── */
-pdfjsLib.getDocument("book.pdf").promise.then(pdf => {
+function updateCurrentChapter(page) {
+  let active = 1;
+  for (let ch in chapterStartPages) {
+    if (page >= chapterStartPages[ch]) active = ch;
+  }
+  document.querySelectorAll(".chapter-btn").forEach(btn =>
+    btn.classList.remove("active")
+  );
+  document.querySelector(`.chapter-btn:nth-child(${active})`)
+    ?.classList.add("active");
+}
+
+// Загрузка PDF
+pdfjsLib.getDocument("book.pdf").promise.then((pdf) => {
   pdfDoc     = pdf;
   totalPages = pdf.numPages;
-
-  const saved = parseInt(localStorage.getItem("savedPage"), 10);
-  currentPage = (saved && saved >= 1 && saved <= totalPages) ? saved : 1;
-
+  const saved = localStorage.getItem("savedPage");
+  currentPage = saved ? parseInt(saved) : 1;
   renderPage(currentPage);
-}).catch(err => {
-  pagesInner.innerHTML = `<p style="color:#c87;padding:20px">Ошибка загрузки PDF: ${err.message}</p>`;
 });
 
-/* ── RENDER A SINGLE PAGE ────────────────────── */
-function renderPage(num) {
-  if (!pdfDoc || rendering) return;
-  rendering = true;
-
-  // Skeleton placeholder
-  pagesInner.innerHTML = "";
-  const skeleton = document.createElement("div");
-  skeleton.className = "page-skeleton";
-  pagesInner.appendChild(skeleton);
-
-  pdfDoc.getPage(num).then(page => {
-    const viewport = page.getViewport({ scale: RENDER_SCALE });
-
-    const canvas = document.createElement("canvas");
-    canvas.width  = viewport.width;
-    canvas.height = viewport.height;
-
-    const ctx = canvas.getContext("2d");
-    page.render({ canvasContext: ctx, viewport }).promise.then(() => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "page-wrapper";
-      wrapper.id = `page-${num}`;
-      wrapper.appendChild(canvas);
-
-      pagesInner.innerHTML = "";
-      pagesInner.appendChild(wrapper);
-
-      scrollContainer.scrollTop = 0;
-
-      currentPage = num;
-      localStorage.setItem("savedPage", num);
-      updateUI();
-      rendering = false;
-    });
-  });
-}
-
-/* ── UPDATE UI ───────────────────────────────── */
-function updateUI() {
-  pageInfo.textContent = `Страница ${currentPage} из ${totalPages}`;
-  prevBtn.disabled = currentPage <= 1;
-  nextBtn.disabled = currentPage >= totalPages;
-  updateActiveChapter(currentPage);
-}
-
-function updateActiveChapter(page) {
-  let active = 1;
-  for (const ch in CHAPTER_STARTS) {
-    if (page >= CHAPTER_STARTS[ch]) active = parseInt(ch);
-  }
-  document.querySelectorAll(".chapter-btn").forEach(btn => {
-    btn.classList.toggle("active", parseInt(btn.dataset.chapter) === active);
-  });
-}
-
-/* ── BUTTONS ─────────────────────────────────── */
-nextBtn.addEventListener("click", () => {
-  if (currentPage < totalPages) renderPage(currentPage + 1);
+document.getElementById("nextPage").addEventListener("click", () => {
+  if (currentPage < totalPages) renderPage(++currentPage);
 });
-prevBtn.addEventListener("click", () => {
-  if (currentPage > 1) renderPage(currentPage - 1);
+document.getElementById("prevPage").addEventListener("click", () => {
+  if (currentPage > 1) renderPage(--currentPage);
 });
 
-/* ── CHAPTER JUMP ────────────────────────────── */
-function goToChapter(ch) {
-  if (CHAPTER_STARTS[ch]) renderPage(CHAPTER_STARTS[ch]);
+function goToChapter(chapter) {
+  currentPage = chapterStartPages[chapter];
+  renderPage(currentPage);
 }
 
-/* ── SWIPE NAVIGATION ────────────────────────── */
-// Vertical swipe on the scroll container:
-// swipe UP   = next page  (feels natural like turning a page down)
-// swipe DOWN = prev page
-let touchStartY = 0;
-let touchStartX = 0;
-
-scrollContainer.addEventListener("touchstart", e => {
-  touchStartY = e.touches[0].clientY;
-  touchStartX = e.touches[0].clientX;
-}, { passive: true });
-
-scrollContainer.addEventListener("touchend", e => {
-  const dy = touchStartY - e.changedTouches[0].clientY;
-  const dx = Math.abs(touchStartX - e.changedTouches[0].clientX);
-
-  // Only trigger if swipe is more vertical than horizontal
-  if (Math.abs(dy) > 60 && Math.abs(dy) > dx * 1.5) {
-    if (dy > 0 && currentPage < totalPages) {
-      renderPage(currentPage + 1); // swipe up → next
-    } else if (dy < 0 && currentPage > 1) {
-      renderPage(currentPage - 1); // swipe down → prev
-    }
-  }
-}, { passive: true });
-
-/* ── KEYBOARD (desktop) ──────────────────────── */
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-    if (currentPage < totalPages) renderPage(currentPage + 1);
-  } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-    if (currentPage > 1) renderPage(currentPage - 1);
-  }
+// Тема
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const isDark = document.body.classList.toggle("dark");
+  document.body.classList.toggle("light", !isDark);
+  document.getElementById("themeToggle").textContent = isDark ? "🌙" : "☀️";
 });

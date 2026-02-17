@@ -7,8 +7,9 @@ let totalPages = 0;
 
 const canvas = document.getElementById("pdfCanvas");
 const ctx = canvas.getContext("2d");
+const wrapper = document.getElementById("canvasWrapper");
 
-/* 👇 УКАЖИ ЗДЕСЬ СТРАНИЦЫ НАЧАЛА ГЛАВ */
+/* 👇 УКАЖИ НАЧАЛО ГЛАВ */
 const chapterStartPages = {
   1: 1,
   2: 16,
@@ -20,31 +21,61 @@ const chapterStartPages = {
 };
 
 function renderPage(num) {
-  pdfDoc.getPage(num).then(function (page) {
-    const viewport = page.getViewport({ scale: 1.4 });
 
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+  wrapper.style.opacity = "0";
+  wrapper.style.transform = "translateX(20px)";
 
-    page.render({
-      canvasContext: ctx,
-      viewport: viewport,
+  setTimeout(() => {
+
+    pdfDoc.getPage(num).then(function (page) {
+
+      const viewport = page.getViewport({ scale: 1.4 });
+
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      page.render({
+        canvasContext: ctx,
+        viewport: viewport,
+      });
+
+      document.getElementById("pageInfo").innerText =
+        `Страница ${num} из ${totalPages}`;
+
+      localStorage.setItem("savedPage", num);
+
+      updateCurrentChapter(num);
+
+      wrapper.style.opacity = "1";
+      wrapper.style.transform = "translateX(0)";
     });
 
-    document.getElementById("pageInfo").innerText =
-      `Страница ${num} из ${totalPages}`;
+  }, 150);
+}
 
-    /* 🔥 АВТОСОХРАНЕНИЕ */
-    localStorage.setItem("savedPage", num);
+function updateCurrentChapter(page) {
+  let active = 1;
+
+  for (let chapter in chapterStartPages) {
+    if (page >= chapterStartPages[chapter]) {
+      active = chapter;
+    }
+  }
+
+  document.querySelectorAll(".chapter-btn").forEach(btn => {
+    btn.classList.remove("active");
   });
+
+  document.querySelector(`.chapter-btn:nth-child(${active})`)
+    ?.classList.add("active");
 }
 
 pdfjsLib.getDocument("book.pdf").promise.then(function (pdf) {
   pdfDoc = pdf;
   totalPages = pdf.numPages;
 
-  const savedPage = localStorage.getItem("savedPage");
-  currentPage = savedPage ? parseInt(savedPage) : 1;
+  const saved = localStorage.getItem("savedPage");
+  currentPage = saved ? parseInt(saved) : 1;
 
   renderPage(currentPage);
 });
@@ -63,9 +94,8 @@ document.getElementById("prevPage").addEventListener("click", () => {
   }
 });
 
-function goToChapter(chapterNumber) {
-  const page = chapterStartPages[chapterNumber];
-  currentPage = page;
+function goToChapter(chapter) {
+  currentPage = chapterStartPages[chapter];
   renderPage(currentPage);
 }
 

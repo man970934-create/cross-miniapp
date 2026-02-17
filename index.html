@@ -8,52 +8,43 @@
 </head>
 <body class="theme-beige">
     <div class="app">
-        <!-- Верхняя панель с кнопками -->
-        <div class="top-bar">
-            <button class="menu-btn" id="menuToggle" aria-label="Главы">📖</button>
-            <button class="theme-toggle" id="themeToggle" aria-label="Сменить тему">🌙</button>
-        </div>
-
-        <!-- Заголовок и автор/описание -->
+        <!-- Шапка с заголовком и кнопкой темы -->
         <header class="book-header">
-            <h1>KROSS</h1>
+            <div class="header-top">
+                <h1>KROSS</h1>
+                <button class="theme-toggle" id="themeToggle" aria-label="Сменить тему">🌙</button>
+            </div>
             <div class="subtitle">часть 1</div>
-            
-            <!-- Блок с автором и описанием (сворачиваемый) -->
+
+            <!-- Блок автора и описания (можно свернуть) -->
             <div class="author-info" id="authorInfo">
                 <div class="author">Автор: Катя Ким</div>
                 <div class="description">
                     На крупнейшем танцевальном российском чемпионате происходит трагедия, при которой один из участников известной провинциальной команды погибает прямо на сцене во время выступления от рук своих товарищей. Лидер коллектива, двадцатилетний Никита Аннинский, восстанавливает череду событий, предшествующих убийству.
                 </div>
-                <!-- Кнопка сворачивания/разворачивания описания -->
-                <button class="toggle-desc" id="toggleDesc">▲</button>
+                <button class="toggle-description" id="toggleDesc" aria-label="Свернуть описание">▲</button>
             </div>
 
-            <!-- Скрытый блок выбора глав (появляется по клику на меню) -->
-            <div class="chapter-panel" id="chapterPanel">
-                <div class="chapter-nav">
-                    <button class="chapter-btn" data-chapter="0">1</button>
-                    <button class="chapter-btn" data-chapter="1">2</button>
-                    <button class="chapter-btn" data-chapter="2">3</button>
-                    <button class="chapter-btn" data-chapter="3">4</button>
-                    <button class="chapter-btn" data-chapter="4">5</button>
-                    <button class="chapter-btn" data-chapter="5">6</button>
-                    <button class="chapter-btn" data-chapter="6">7</button>
-                </div>
+            <!-- Кнопки глав (всегда видны) -->
+            <div class="chapter-nav">
+                <button class="chapter-btn" data-chapter="0">1</button>
+                <button class="chapter-btn" data-chapter="1">2</button>
+                <button class="chapter-btn" data-chapter="2">3</button>
+                <button class="chapter-btn" data-chapter="3">4</button>
+                <button class="chapter-btn" data-chapter="4">5</button>
+                <button class="chapter-btn" data-chapter="5">6</button>
+                <button class="chapter-btn" data-chapter="6">7</button>
             </div>
         </header>
 
         <!-- Контейнер для страниц (вертикальный свайп) -->
         <div class="pages-container" id="pagesContainer">
-            <div class="page" id="currentPage"></div>
-            <div class="page" id="nextPage" style="display: none;"></div>
+            <!-- Страницы будут добавляться динамически -->
         </div>
 
-        <!-- Индикатор страниц внизу -->
-        <div class="page-indicator" id="pageIndicator">1 / 10</div>
-
-        <!-- Подсказка для первого свайпа -->
-        <div class="swipe-hint" id="swipeHint">Листай вверх!</div>
+        <!-- Индикатор страниц и подсказка -->
+        <div class="page-indicator" id="pageIndicator">1 / 130</div>
+        <div class="hint" id="hint">Листай вверх!</div>
     </div>
     <script src="chapters.js"></script>
     <script src="script.js"></script>

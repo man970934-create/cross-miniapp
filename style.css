@@ -22,14 +22,6 @@ body.light {
   padding: 20px;
 }
 
-canvas {
-  width: 95%;
-  max-width: 900px;
-  margin-top: 20px;
-  border-radius: 6px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-}
-
 .top-bar {
   display: flex;
   justify-content: flex-end;
@@ -44,6 +36,7 @@ canvas {
   cursor: pointer;
 }
 
+/* КНОПКИ ГЛАВ */
 .chapter-buttons {
   margin-bottom: 15px;
 }
@@ -56,8 +49,42 @@ canvas {
   padding: 6px 16px;
   margin: 4px;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
+.chapter-btn.active {
+  background: #d6b48c;
+}
+
+/* КНИГА */
+#canvasWrapper {
+  display: inline-block;
+  padding: 25px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #5a3a2d, #3e241b);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  transition: all 0.4s ease;
+}
+
+body.light #canvasWrapper {
+  background: linear-gradient(145deg, #e7d7be, #d9c5a5);
+}
+
+canvas {
+  border-radius: 6px;
+  transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Смягчение PDF */
+body.dark canvas {
+  filter: brightness(0.85) contrast(1.1);
+}
+
+body.light canvas {
+  filter: sepia(0.3) contrast(1.05);
+}
+
+/* ПАГИНАЦИЯ */
 .controls {
   margin-top: 20px;
 }

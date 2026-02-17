@@ -1,314 +1,213 @@
-// Состояние приложения
-let currentChapter = 0;          // индекс главы (0-6)
-let currentPage = 0;             // индекс страницы в текущей главе
-let pages = [];                  // массив фрагментов текста для текущей главы
+// данные из chapters.js
+const chaptersData = chapters; // предполагается, что chapters объявлен в chapters.js
+
+let currentChap = 0;
+let currentPage = 0;
+let pages = [];
 let totalPages = 0;
+let hintShown = false;
 
-// Элементы DOM
-const pagesContainer = document.getElementById('pagesContainer');
-const pageIndicator = document.getElementById('pageIndicator');
+const reader = document.getElementById('reader');
+const pageNum = document.getElementById('pageNum');
 const hint = document.getElementById('hint');
-const chapterButtons = document.querySelectorAll('.chapter-btn');
-const themeToggle = document.getElementById('themeToggle');
+const themeBtn = document.getElementById('themeBtn');
 const toggleDesc = document.getElementById('toggleDesc');
-const description = document.querySelector('.description');
+const desc = document.getElementById('desc');
+const chapBtns = document.querySelectorAll('.chap');
 
-// Текущая страница (DOM-элемент)
-let currentPageElement = null;
-
-// --- Загрузка сохранённых данных ---
-function loadSaved() {
-    const saved = localStorage.getItem('kross_reader');
+// загрузка сохранённого
+function loadState() {
+    const saved = localStorage.getItem('kross');
     if (saved) {
         try {
-            const { chapter, page, theme, descCollapsed, hintShown } = JSON.parse(saved);
-            if (chapter >= 0 && chapter < chapters.length) {
-                currentChapter = chapter;
-                currentPage = page;
-            }
+            const { chap, page, theme, descCollapsed, hintHidden } = JSON.parse(saved);
+            currentChap = chap || 0;
+            currentPage = page || 0;
             if (theme === 'brown') {
                 document.body.classList.remove('theme-beige');
                 document.body.classList.add('theme-brown');
-                themeToggle.textContent = '☀️';
-            } else {
-                document.body.classList.add('theme-beige');
-                themeToggle.textContent = '🌙';
+                themeBtn.textContent = '☀️';
             }
             if (descCollapsed) {
-                description.classList.add('collapsed');
+                desc.classList.add('collapsed');
                 toggleDesc.textContent = '▼';
-            } else {
-                description.classList.remove('collapsed');
-                toggleDesc.textContent = '▲';
             }
-            if (hintShown) {
+            if (hintHidden) {
                 hint.classList.add('hidden');
+                hintShown = true;
             }
-        } catch (e) {
-            console.warn('Ошибка загрузки сохранения', e);
-        }
+        } catch (e) {}
     }
 }
 
-// --- Сохранение текущей позиции ---
-function saveProgress() {
+// сохранение
+function saveState() {
     const theme = document.body.classList.contains('theme-brown') ? 'brown' : 'beige';
-    const descCollapsed = description.classList.contains('collapsed');
-    const hintShown = hint.classList.contains('hidden');
-    localStorage.setItem('kross_reader', JSON.stringify({
-        chapter: currentChapter,
+    const descCollapsed = desc.classList.contains('collapsed');
+    const hintHidden = hint.classList.contains('hidden');
+    localStorage.setItem('kross', JSON.stringify({
+        chap: currentChap,
         page: currentPage,
         theme: theme,
         descCollapsed: descCollapsed,
-        hintShown: hintShown
+        hintHidden: hintHidden
     }));
 }
 
-// --- Динамическое разбиение текста на страницы ---
-function splitIntoPages(text) {
-    const tempDiv = document.createElement('div');
-    tempDiv.className = 'page';
-    tempDiv.style.cssText = `
+// разбиение текста на страницы
+function splitPages(text) {
+    const temp = document.createElement('div');
+    temp.style.cssText = `
         position: absolute;
         visibility: hidden;
-        width: ${pagesContainer.clientWidth}px;
-        padding: 20px 25px 20px 20px;
+        width: ${reader.clientWidth}px;
+        padding: ${getComputedStyle(reader).padding};
         font-size: 1rem;
         line-height: 1.8;
-        font-family: Georgia, 'Times New Roman', serif;
-        white-space: normal;
-        word-wrap: break-word;
-        left: 0;
-        top: 0;
+        font-family: Georgia, serif;
     `;
-    document.body.appendChild(tempDiv);
+    document.body.appendChild(temp);
 
-    const paragraphs = text.split(/\n\s*\n/);
+    const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(p => p);
     const pages = [];
-    let currentPageText = '';
-    let currentPageHeight = 0;
-    const maxHeight = pagesContainer.clientHeight;
+    let current = '';
+    let currentHeight = 0;
+    const maxHeight = reader.clientHeight;
 
     paragraphs.forEach(para => {
-        const cleanPara = para.replace(/\s+/g, ' ').trim();
-        if (!cleanPara) return;
-
         const p = document.createElement('p');
-        p.textContent = cleanPara;
-        tempDiv.appendChild(p);
-        const paraHeight = p.offsetHeight;
-        tempDiv.removeChild(p);
+        p.textContent = para;
+        temp.appendChild(p);
+        const h = p.offsetHeight;
+        temp.removeChild(p);
 
-        if (currentPageHeight + paraHeight > maxHeight && currentPageText !== '') {
-            pages.push(currentPageText);
-            currentPageText = cleanPara + '\n\n';
-            currentPageHeight = paraHeight;
+        if (currentHeight + h > maxHeight && current) {
+            pages.push(current);
+            current = para + '\n\n';
+            currentHeight = h;
         } else {
-            currentPageText += cleanPara + '\n\n';
-            currentPageHeight += paraHeight;
+            current += para + '\n\n';
+            currentHeight += h;
         }
     });
+    if (current) pages.push(current);
 
-    if (currentPageText) {
-        pages.push(currentPageText);
-    }
-
-    document.body.removeChild(tempDiv);
+    document.body.removeChild(temp);
     return pages;
 }
 
-// --- Создание DOM-элемента страницы ---
-function createPageElement(text) {
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'page';
-    const paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
-    const html = paragraphs.map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('');
-    pageDiv.innerHTML = html;
-    return pageDiv;
+// отобразить текущую страницу
+function renderPage() {
+    if (!pages.length) return;
+    const html = pages[currentPage].split('\n\n').map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('');
+    reader.innerHTML = html;
+    pageNum.textContent = `${currentPage+1} / ${totalPages}`;
+    saveState();
 }
 
-// --- Отображение страницы с вертикальной анимацией ---
-function renderPage(direction = 'next') {
-    if (!pages.length) {
-        pagesContainer.innerHTML = '<div class="page"><p>Загрузка...</p></div>';
-        pageIndicator.textContent = '0 / 0';
-        return;
-    }
-
-    const newPageElement = createPageElement(pages[currentPage]);
-
-    if (!currentPageElement) {
-        // Первый запуск
-        pagesContainer.innerHTML = '';
-        currentPageElement = newPageElement;
-        pagesContainer.appendChild(currentPageElement);
-    } else {
-        const oldPage = currentPageElement;
-        const newPage = newPageElement;
-
-        const startTransform = direction === 'next' ? 'translateY(100%)' : 'translateY(-100%)';
-        const endTransform = direction === 'next' ? 'translateY(-100%)' : 'translateY(100%)';
-
-        oldPage.style.transition = 'transform 0.3s ease-in-out';
-        newPage.style.transition = 'transform 0.3s ease-in-out';
-        newPage.style.transform = startTransform;
-
-        pagesContainer.appendChild(newPage);
-
-        requestAnimationFrame(() => {
-            oldPage.style.transform = endTransform;
-            newPage.style.transform = 'translateY(0)';
-        });
-
-        setTimeout(() => {
-            if (pagesContainer.contains(oldPage)) {
-                pagesContainer.removeChild(oldPage);
-            }
-            oldPage.style.transition = '';
-            newPage.style.transition = '';
-            currentPageElement = newPage;
-        }, 300);
-    }
-
-    pageIndicator.textContent = `${currentPage + 1} / ${totalPages}`;
-    saveProgress();
-}
-
-// --- Загрузить главу ---
+// загрузить главу
 function loadChapter(index) {
-    if (index === currentChapter && pages.length > 0) {
-        // Уже загружена, просто обновляем отображение страницы
-        if (currentPageElement) {
-            pagesContainer.innerHTML = '';
-            currentPageElement = createPageElement(pages[currentPage]);
-            pagesContainer.appendChild(currentPageElement);
-        } else {
-            renderPage();
-        }
+    if (index === currentChap && pages.length) {
+        renderPage();
         return;
     }
-
-    currentChapter = index;
+    currentChap = index;
     currentPage = 0;
-    const fullText = chapters[index].text;
-
-    pagesContainer.innerHTML = '';
-    currentPageElement = null;
-
+    const fullText = chaptersData[index].text;
+    // небольшая задержка, чтобы reader уже имел размеры
     setTimeout(() => {
-        pages = splitIntoPages(fullText);
+        pages = splitPages(fullText);
         totalPages = pages.length;
         renderPage();
-
-        chapterButtons.forEach((btn, i) => {
+        // подсветка кнопки
+        chapBtns.forEach((btn, i) => {
             btn.classList.toggle('active', i === index);
         });
-    }, 50);
+    }, 20);
 }
 
-// --- Обработка вертикального свайпа ---
-let touchStartY = 0;
-let touchEndY = 0;
-let isSwiping = false;
-
-pagesContainer.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-    isSwiping = true;
-}, { passive: true });
-
-pagesContainer.addEventListener('touchmove', (e) => {
-    if (!isSwiping) return;
-    touchEndY = e.touches[0].clientY;
-}, { passive: true });
-
-pagesContainer.addEventListener('touchend', (e) => {
-    if (!isSwiping) return;
-    const threshold = 50;
-    const diff = touchEndY - touchStartY;
-
-    // Скрываем подсказку при первом свайпе
-    if (!hint.classList.contains('hidden')) {
-        hint.classList.add('hidden');
-        saveProgress();
-    }
-
+// свайп
+let touchStart = null;
+reader.addEventListener('touchstart', (e) => {
+    touchStart = e.touches[0].clientY;
+});
+reader.addEventListener('touchend', (e) => {
+    if (!touchStart) return;
+    const diff = e.changedTouches[0].clientY - touchStart;
+    const threshold = 40;
     if (Math.abs(diff) > threshold) {
         if (diff < 0 && currentPage < totalPages - 1) {
-            // свайп вверх -> следующая страница
+            // вверх
             currentPage++;
-            renderPage('next');
+            renderPage();
         } else if (diff > 0 && currentPage > 0) {
-            // свайп вниз -> предыдущая страница
+            // вниз
             currentPage--;
-            renderPage('prev');
+            renderPage();
         }
     }
+    touchStart = null;
 
-    isSwiping = false;
-    touchStartY = 0;
-    touchEndY = 0;
-}, { passive: true });
+    // скрыть подсказку при первом свайпе
+    if (!hintShown) {
+        hint.classList.add('hidden');
+        hintShown = true;
+        saveState();
+    }
+});
 
-// --- Кнопки глав ---
-chapterButtons.forEach((btn, idx) => {
+// клик по кнопкам глав
+chapBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.chap);
         loadChapter(idx);
-        // Скрываем подсказку при любом взаимодействии
-        if (!hint.classList.contains('hidden')) {
+        if (!hintShown) {
             hint.classList.add('hidden');
-            saveProgress();
+            hintShown = true;
+            saveState();
         }
     });
 });
 
-// --- Переключение темы ---
-themeToggle.addEventListener('click', () => {
+// переключение темы
+themeBtn.addEventListener('click', () => {
     document.body.classList.toggle('theme-beige');
     document.body.classList.toggle('theme-brown');
-    themeToggle.textContent = document.body.classList.contains('theme-brown') ? '☀️' : '🌙';
-    saveProgress();
-
-    // Пересчёт страниц при смене темы
-    if (chapters[currentChapter]) {
-        const fullText = chapters[currentChapter].text;
-        pages = splitIntoPages(fullText);
+    themeBtn.textContent = document.body.classList.contains('theme-brown') ? '☀️' : '🌙';
+    saveState();
+    // пересчитать страницы (из-за возможного изменения шрифта)
+    if (chaptersData[currentChap]) {
+        const fullText = chaptersData[currentChap].text;
+        pages = splitPages(fullText);
         totalPages = pages.length;
-        currentPage = Math.min(currentPage, totalPages - 1);
         renderPage();
     }
 });
 
-// --- Сворачивание/разворачивание описания ---
+// сворачивание описания
 toggleDesc.addEventListener('click', () => {
-    description.classList.toggle('collapsed');
-    toggleDesc.textContent = description.classList.contains('collapsed') ? '▼' : '▲';
-    saveProgress();
-
-    // Пересчёт страниц, так как изменилась доступная высота
-    if (chapters[currentChapter]) {
-        const fullText = chapters[currentChapter].text;
-        pages = splitIntoPages(fullText);
+    desc.classList.toggle('collapsed');
+    toggleDesc.textContent = desc.classList.contains('collapsed') ? '▼' : '▲';
+    saveState();
+    // пересчитать страницы, так как изменилась высота reader
+    if (chaptersData[currentChap]) {
+        const fullText = chaptersData[currentChap].text;
+        pages = splitPages(fullText);
         totalPages = pages.length;
-        currentPage = Math.min(currentPage, totalPages - 1);
         renderPage();
     }
 });
 
-// --- Обработка изменения размера окна ---
-let resizeTimer;
+// ресайз окна
 window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-        if (chapters[currentChapter]) {
-            const fullText = chapters[currentChapter].text;
-            pages = splitIntoPages(fullText);
-            totalPages = pages.length;
-            currentPage = Math.min(currentPage, totalPages - 1);
-            renderPage();
-        }
-    }, 150);
+    if (chaptersData[currentChap]) {
+        const fullText = chaptersData[currentChap].text;
+        pages = splitPages(fullText);
+        totalPages = pages.length;
+        renderPage();
+    }
 });
 
-// --- Инициализация ---
-loadSaved();
-loadChapter(currentChapter);
+// старт
+loadState();
+loadChapter(currentChap);

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>KROSS — часть 1</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+    <div class="app-container">
+        <header class="header">
+            <div class="title-row">
+                <div class="title">
+                    <span>KROSS</span>
+                    <span class="dancer-icon">🕺</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle">🌙 Ночная</button>
+            </div>
+            <div class="subtitle">часть 1</div>
+            <div class="controls">
+                <select class="chapter-selector" id="chapterSelect"></select>
+            </div>
+        </header>
+
+        <main class="content" id="content">
+            <div class="page-container" id="pageContainer">
+                <div class="page-content" id="pageContent"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <span class="page-indicator" id="pageIndicator">1 / 1</span>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="prevPage" disabled>⬆️</button>
+                <button class="nav-btn" id="nextPage">⬇️</button>
+            </div>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

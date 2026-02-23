@@ -193,10 +193,6 @@ body.header-hidden .header {
     text-indent: 1.5em;
 }
 
-.paragraph:first-of-type {
-    text-indent: 0;
-}
-
 .footer {
     padding: 8px 12px 16px;
     display: flex;

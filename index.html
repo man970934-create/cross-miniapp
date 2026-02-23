@@ -8,7 +8,7 @@
 </head>
 <body class="theme-light">
     <!-- Плавающая кнопка для показа шапки (изначально скрыта) -->
-    <button id="showHeaderBtn" class="show-header-btn" style="display: none;">▼</button>
+    <button class="show-header-btn" id="showHeaderBtn" style="display: none;">▼</button>
 
     <div class="app-container">
         <header class="header" id="mainHeader">
@@ -17,10 +17,10 @@
                     <span>KROSS</span>
                 </div>
                 <div class="header-controls">
-                    <button id="fontDecrease" class="font-btn" title="Уменьшить шрифт">А–</button>
-                    <button id="fontIncrease" class="font-btn" title="Увеличить шрифт">А+</button>
+                    <button class="font-btn" id="fontDecrease" title="Уменьшить шрифт">А–</button>
+                    <button class="font-btn" id="fontIncrease" title="Увеличить шрифт">А+</button>
                     <button class="theme-toggle" id="themeToggle">🌙 Ночная</button>
-                    <button id="toggleHeaderBtn" class="toggle-header-btn" title="Скрыть панель">▲</button>
+                    <button class="toggle-header-btn" id="toggleHeaderBtn" title="Скрыть панель">▲</button>
                 </div>
             </div>
             <div class="subtitle">часть 1</div>
@@ -34,7 +34,7 @@
 
         <footer class="footer">
             <span class="page-indicator" id="pageIndicator">1 / 1</span>
-            <!-- Выбор главы перенесён сюда -->
+            <!-- Выбор главы теперь здесь -->
             <select class="chapter-selector" id="chapterSelect"></select>
             <div class="nav-buttons">
                 <button class="nav-btn" id="prevPage" disabled>⬆️</button>

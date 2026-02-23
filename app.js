@@ -16,13 +16,64 @@ const pageIndicator = document.getElementById('pageIndicator');
 const prevBtn = document.getElementById('prevPage');
 const nextBtn = document.getElementById('nextPage');
 
-// Новые элементы
 const toggleHeaderBtn = document.getElementById('toggleHeaderBtn');
 const showHeaderBtn = document.getElementById('showHeaderBtn');
 const fontDecrease = document.getElementById('fontDecrease');
 const fontIncrease = document.getElementById('fontIncrease');
 
-let currentFontSize = 16; // базовый размер шрифта
+let currentFontSize = 16;
+let readingSessionId = null;
+let readingStartTime = null;
+let heartbeatInterval = null;
+
+function generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function sendWebAppData(data) {
+    if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify(data));
+    } else {
+        console.log('WebApp not available, data:', data);
+    }
+}
+
+function startReadingSession() {
+    if (readingSessionId) return;
+    readingSessionId = generateSessionId();
+    readingStartTime = Date.now();
+    sendWebAppData({ action: 'start_reading', session_id: readingSessionId });
+    heartbeatInterval = setInterval(() => {
+        if (readingSessionId) {
+            const duration = Math.floor((Date.now() - readingStartTime) / 1000);
+            sendWebAppData({ action: 'heartbeat', session_id: readingSessionId, duration });
+        }
+    }, 30000);
+}
+
+function endReadingSession() {
+    if (readingSessionId && readingStartTime) {
+        const duration = Math.floor((Date.now() - readingStartTime) / 1000);
+        sendWebAppData({ action: 'end_reading', session_id: readingSessionId, duration });
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+        readingSessionId = null;
+        readingStartTime = null;
+    }
+}
+
+function sendChapterChange(chapter) {
+    sendWebAppData({ action: 'chapter_changed', chapter });
+}
+
+window.addEventListener('load', startReadingSession);
+window.addEventListener('beforeunload', endReadingSession);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && readingSessionId && readingStartTime) {
+        const duration = Math.floor((Date.now() - readingStartTime) / 1000);
+        sendWebAppData({ action: 'heartbeat', session_id: readingSessionId, duration });
+    }
+});
 
 async function loadChapterFromFile(chapterNumber) {
     if (chapterTexts[chapterNumber]) return chapterTexts[chapterNumber];
@@ -117,7 +168,6 @@ function prevPage() {
     }
 }
 
-// Тач-события для смахивания
 let touchStartY = 0;
 let touchStartTime = 0;
 
@@ -135,7 +185,6 @@ pageContainer.addEventListener('touchend', (e) => {
     else prevPage();
 }, { passive: true });
 
-// Переключение темы
 themeToggle.addEventListener('click', () => {
     if (body.classList.contains('theme-light')) {
         body.classList.remove('theme-light');
@@ -149,23 +198,19 @@ themeToggle.addEventListener('click', () => {
     saveSettings();
 });
 
-// Выбор главы
 chapterSelect.addEventListener('change', async (e) => {
     const newChapter = parseInt(e.target.value);
     if (newChapter !== currentChapter) {
         currentChapter = newChapter;
         currentPage = 1;
         await loadChapter(currentChapter);
+        sendChapterChange(newChapter);
     }
 });
 
-// Навигация
 prevBtn.addEventListener('click', prevPage);
 nextBtn.addEventListener('click', nextPage);
 
-// === Новые функции ===
-
-// Изменение размера шрифта
 function changeFontSize(delta) {
     let newSize = currentFontSize + delta;
     if (newSize < 12) newSize = 12;
@@ -180,17 +225,16 @@ function changeFontSize(delta) {
 fontDecrease.addEventListener('click', () => changeFontSize(-2));
 fontIncrease.addEventListener('click', () => changeFontSize(2));
 
-// Скрытие/показ верхней панели
 function hideHeader() {
     body.classList.add('header-hidden');
-    toggleHeaderBtn.style.display = 'none'; // кнопка скрывается вместе с header, но на всякий случай
+    toggleHeaderBtn.style.display = 'none';
     showHeaderBtn.style.display = 'block';
     saveSettings();
 }
 
 function showHeader() {
     body.classList.remove('header-hidden');
-    toggleHeaderBtn.style.display = 'inline-block'; // вернётся автоматически при показе header
+    toggleHeaderBtn.style.display = 'inline-block';
     showHeaderBtn.style.display = 'none';
     saveSettings();
 }
@@ -198,7 +242,6 @@ function showHeader() {
 toggleHeaderBtn.addEventListener('click', hideHeader);
 showHeaderBtn.addEventListener('click', showHeader);
 
-// Сохранение настроек
 function saveSettings() {
     localStorage.setItem('kross_theme', body.classList.contains('theme-dark') ? 'dark' : 'light');
     localStorage.setItem('kross_chapter', currentChapter);
@@ -207,7 +250,6 @@ function saveSettings() {
     localStorage.setItem('kross_header_hidden', body.classList.contains('header-hidden') ? 'yes' : 'no');
 }
 
-// Загрузка настроек
 function loadSettings() {
     const savedTheme = localStorage.getItem('kross_theme');
     if (savedTheme === 'dark') {
@@ -254,7 +296,6 @@ function loadSettings() {
     }
 }
 
-// Инициализация
 (async function init() {
     initChapterSelect();
     loadSettings();
@@ -265,4 +306,5 @@ function loadSettings() {
         updateNavButtons();
         saveSettings();
     }
+    sendChapterChange(currentChapter);
 })();

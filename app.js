@@ -277,3 +277,30 @@ fontIncrease.addEventListener('click', () => changeFontSize(2));
     await loadChapter(currentChapter);
 
 })();
+
+function endReadingSession() {
+    if (readingSessionId && readingStartTime) {
+        const duration = Math.floor((Date.now() - readingStartTime) / 1000);
+
+        const progress = Math.round((currentPage / totalPages) * 100);
+
+        sendWebAppData({
+            action: 'close_app',
+            session_id: readingSessionId,
+            duration,
+            chapter: currentChapter,
+            page: progress
+        });
+
+        sendWebAppData({
+            action: 'end_reading',
+            session_id: readingSessionId,
+            duration
+        });
+
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+        readingSessionId = null;
+        readingStartTime = null;
+    }
+}

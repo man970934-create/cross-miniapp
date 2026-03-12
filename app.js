@@ -6,6 +6,7 @@ let currentPage = 1;
 let totalPages = 1;
 let pages = [];
 let chapterTexts = {};
+let illustrations = {};
 
 const body = document.body;
 const themeToggle = document.getElementById('themeToggle');
@@ -23,11 +24,23 @@ const fontIncrease = document.getElementById('fontIncrease');
 
 let currentFontSize = 16;
 
+async function loadIllustrations() {
+    try {
+        const response = await fetch(`illustrations.json?v=1`);
+        illustrations = await response.json();
+    } catch (e) {
+        console.error("Ошибка загрузки illustrations.json", e);
+    }
+}
+
 async function loadChapterFromFile(chapterNumber) {
+
     if (chapterTexts[chapterNumber]) return chapterTexts[chapterNumber];
 
     try {
-        const response = await fetch(`chapters/chapter${chapterNumber}.txt?v=2`);
+
+        const response = await fetch(`chapters/chapter${chapterNumber}.txt?v=1`);
+
         if (!response.ok) throw new Error('Ошибка загрузки');
 
         const text = await response.text();
@@ -38,19 +51,27 @@ async function loadChapterFromFile(chapterNumber) {
             .filter(p => p.length > 0);
 
         chapterTexts[chapterNumber] = paragraphs;
+
         return paragraphs;
 
     } catch (e) {
+
         console.error(e);
+
         return [`[Не удалось загрузить главу ${chapterNumber}]`];
     }
 }
 
 function initChapterSelect() {
+
     for (let i = 1; i <= CHAPTERS_COUNT; i++) {
+
         const option = document.createElement('option');
+
         option.value = i;
+
         option.textContent = `Глава ${i}`;
+
         chapterSelect.appendChild(option);
     }
 }
@@ -73,6 +94,7 @@ async function loadChapter(chapter) {
 function splitIntoPages(paragraphs, maxChars) {
 
     const pages = [];
+
     let currentPageText = '';
 
     for (let para of paragraphs) {
@@ -80,16 +102,19 @@ function splitIntoPages(paragraphs, maxChars) {
         if ((currentPageText.length + para.length) > maxChars && currentPageText.length > 0) {
 
             pages.push(currentPageText.trim());
+
             currentPageText = para + '\n\n';
 
         } else {
 
             if (currentPageText.length > 0) currentPageText += '\n\n';
+
             currentPageText += para;
         }
     }
 
     if (currentPageText.trim().length > 0) {
+
         pages.push(currentPageText.trim());
     }
 
@@ -98,23 +123,28 @@ function splitIntoPages(paragraphs, maxChars) {
 
 function renderPage() {
 
-    const finalPage = (currentChapter === CHAPTERS_COUNT && currentPage === totalPages + 1);
+    const isFinalPage = (currentChapter === CHAPTERS_COUNT && currentPage === totalPages + 1);
 
-    if (finalPage) {
+    if (isFinalPage) {
+
+        const img = illustrations["final"];
 
         pageContent.innerHTML = `
-        <img src="images/team.png?v=2"
+        <img src="images/${img}?v=1"
         style="width:100%;max-width:420px;display:block;margin:0 auto;">
         `;
 
         pageIndicator.textContent = `${currentPage} / ${totalPages + 1}`;
+
         return;
     }
 
     if (!pages.length) {
 
         pageContent.innerHTML = '<p class="paragraph">Пустая глава</p>';
+
         pageIndicator.textContent = `0 / 0`;
+
         return;
     }
 
@@ -126,15 +156,16 @@ function renderPage() {
 
     let html = '';
 
-    if (currentChapter >= 2 && currentPage === 1) {
+    if (currentPage === 1 && illustrations[currentChapter]) {
 
         html += `
-        <img src="images/chapter${currentChapter}.png?v=2"
+        <img src="images/${illustrations[currentChapter]}?v=1"
         style="width:100%;max-width:420px;display:block;margin:0 auto 20px auto;">
         `;
     }
 
     paragraphs.forEach(p => {
+
         html += `<p class="paragraph">${p}</p>`;
     });
 
@@ -164,6 +195,7 @@ function nextPage() {
     if (currentPage < lastPage) {
 
         currentPage++;
+
         renderPage();
         updateNavButtons();
     }
@@ -174,6 +206,7 @@ function prevPage() {
     if (currentPage > 1) {
 
         currentPage--;
+
         renderPage();
         updateNavButtons();
     }
@@ -186,6 +219,7 @@ chapterSelect.addEventListener('change', async (e) => {
     if (newChapter !== currentChapter) {
 
         currentChapter = newChapter;
+
         currentPage = 1;
 
         await loadChapter(currentChapter);
@@ -200,13 +234,17 @@ themeToggle.addEventListener('click', () => {
     if (body.classList.contains('theme-light')) {
 
         body.classList.remove('theme-light');
+
         body.classList.add('theme-dark');
+
         themeToggle.textContent = '☀️ Дневная';
 
     } else {
 
         body.classList.remove('theme-dark');
+
         body.classList.add('theme-light');
+
         themeToggle.textContent = '🌙 Ночная';
     }
 });
@@ -216,11 +254,13 @@ function changeFontSize(delta) {
     let newSize = currentFontSize + delta;
 
     if (newSize < 12) newSize = 12;
+
     if (newSize > 24) newSize = 24;
 
     if (newSize !== currentFontSize) {
 
         currentFontSize = newSize;
+
         document.body.style.fontSize = currentFontSize + 'px';
     }
 }
@@ -231,6 +271,9 @@ fontIncrease.addEventListener('click', () => changeFontSize(2));
 (async function init() {
 
     initChapterSelect();
+
+    await loadIllustrations();
+
     await loadChapter(currentChapter);
 
 })();

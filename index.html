@@ -1,47 +1,82 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>KROSS — часть 1</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KROSS</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body class="theme-light">
-    <!-- Плавающая кнопка для показа шапки (изначально скрыта) -->
-    <button class="show-header-btn" id="showHeaderBtn" style="display: none;">▼</button>
 
-    <div class="app-container">
-        <header class="header" id="mainHeader">
-            <div class="title-row">
-                <div class="title">
-                    <span>KROSS</span>
-                </div>
-                <div class="header-controls">
-                    <button class="font-btn" id="fontDecrease" title="Уменьшить шрифт">А–</button>
-                    <button class="font-btn" id="fontIncrease" title="Увеличить шрифт">А+</button>
-                    <button class="theme-toggle" id="themeToggle">🌙 Ночная</button>
-                    <button class="toggle-header-btn" id="toggleHeaderBtn" title="Скрыть панель">▲</button>
-                </div>
-            </div>
-            <div class="subtitle">часть 1</div>
-        </header>
+<button class="show-header-btn" id="showHeaderBtn" style="display:none;">▼</button>
 
-        <main class="content" id="content">
-            <div class="page-container" id="pageContainer">
-                <div class="page-content" id="pageContent"></div>
-            </div>
-        </main>
+<div class="app-container">
 
-        <footer class="footer">
-            <span class="page-indicator" id="pageIndicator">1 / 1</span>
-            <!-- Выбор главы теперь здесь -->
-            <select class="chapter-selector" id="chapterSelect"></select>
-            <div class="nav-buttons">
-                <button class="nav-btn" id="prevPage" disabled>⬆️</button>
-                <button class="nav-btn" id="nextPage">⬇️</button>
-            </div>
-        </footer>
-    </div>
-    <script src="app.js"></script>
+<header class="header" id="mainHeader">
+
+<div class="title-row">
+
+<div class="title">
+<span>KROSS</span>
+</div>
+
+<div class="header-controls">
+
+<button class="font-btn" id="fontDecrease">A-</button>
+<button class="font-btn" id="fontIncrease">A+</button>
+
+<button class="theme-toggle" id="themeToggle">
+🌙 Ночная
+</button>
+
+<button class="toggle-header-btn" id="toggleHeaderBtn">
+▲
+</button>
+
+</div>
+</div>
+
+<div class="subtitle">
+часть 1
+</div>
+
+</header>
+
+<main class="content">
+
+<div class="page-container" id="pageContainer">
+
+<div class="page-content" id="pageContent"></div>
+
+</div>
+
+</main>
+
+<footer class="footer">
+
+<span class="page-indicator" id="pageIndicator">
+1 / 1
+</span>
+
+<select class="chapter-selector" id="chapterSelect"></select>
+
+<div class="nav-buttons">
+
+<button class="nav-btn" id="prevPage">⬆️</button>
+
+<button class="nav-btn" id="nextPage">⬇️</button>
+
+</div>
+
+</footer>
+
+</div>
+
+<script src="app.js"></script>
+
 </body>
 </html>

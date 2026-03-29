@@ -15,7 +15,7 @@ body {
     flex-direction: column;
 }
 
-/* Тема светлая (бежевая) */
+/* Тема светлая */
 body.theme-light {
     background-color: #f5f0e6;
     color: #3e2e1f;
@@ -32,7 +32,7 @@ body.theme-light button {
     color: #3e2e1f;
 }
 
-/* Тема тёмная (коричневая) */
+/* Тема тёмная */
 body.theme-dark {
     background-color: #4a2c1a;
     color: #f0e0c0;
@@ -49,17 +49,19 @@ body.theme-dark button {
     color: #f0e0c0;
 }
 
-/* Стили для кнопок */
+/* Общие стили кнопок */
 body.theme-light .font-btn,
 body.theme-light .toggle-header-btn,
-body.theme-light .save-progress-btn {
+body.theme-light .save-progress-btn,
+body.theme-light .theme-toggle {
     background-color: #d6c4b0;
     border: 1px solid #b7a48e;
     color: #3e2e1f;
 }
 body.theme-dark .font-btn,
 body.theme-dark .toggle-header-btn,
-body.theme-dark .save-progress-btn {
+body.theme-dark .save-progress-btn,
+body.theme-dark .theme-toggle {
     background-color: #5a3a24;
     border: 1px solid #7a5a3e;
     color: #f0e0c0;
@@ -97,7 +99,7 @@ body.header-hidden .header {
     display: none;
 }
 
-/* Основной контейнер */
+/* Контейнер приложения */
 .app-container {
     display: flex;
     flex-direction: column;
@@ -118,35 +120,31 @@ body.header-hidden .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 8px;
 }
 .title {
     font-size: 1.8rem;
     font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 .header-controls {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    justify-content: flex-end;
 }
 .font-btn,
 .toggle-header-btn,
-.save-progress-btn {
+.save-progress-btn,
+.theme-toggle {
     background: none;
     border-radius: 30px;
     padding: 6px 12px;
     font-size: 0.9rem;
     cursor: pointer;
     line-height: 1;
-}
-.theme-toggle {
-    padding: 8px 14px;
-    border-radius: 30px;
-    font-size: 0.9rem;
-    cursor: pointer;
     white-space: nowrap;
 }
 .subtitle {
@@ -240,4 +238,24 @@ body.header-hidden .header {
 }
 body.theme-dark .page-container::-webkit-scrollbar-thumb {
     background: rgba(255,255,240,0.2);
+}
+
+/* Адаптация для очень узких экранов (ширина < 480px) */
+@media (max-width: 480px) {
+    .header-controls {
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .title {
+        width: 100%;
+        text-align: center;
+    }
+    .title-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .font-btn, .toggle-header-btn, .save-progress-btn, .theme-toggle {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
 }

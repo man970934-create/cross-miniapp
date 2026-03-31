@@ -1,6 +1,6 @@
 'use strict';
 
-const CHAPTERS_COUNT = 8; // Глава 8 добавлена
+const CHAPTERS_COUNT = 8;
 const MAX_CHARS_PER_PAGE = 2000;
 
 let currentChapter = 1;
@@ -52,13 +52,17 @@ async function loadChapterFromFile(chapterNumber) {
     }
 }
 
-// ---------- Инициализация селекта глав ----------
+// ---------- Инициализация селекта глав (8-я глава – "Дополнительная глава") ----------
 function initChapterSelect() {
     chapterSelect.innerHTML = '';
     for (let i = 1; i <= CHAPTERS_COUNT; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.textContent = `Глава ${i}`;
+        if (i === 8) {
+            option.textContent = 'Дополнительная глава';
+        } else {
+            option.textContent = `Глава ${i}`;
+        }
         chapterSelect.appendChild(option);
     }
     chapterSelect.value = currentChapter;
@@ -109,7 +113,6 @@ function escapeHtml(str) {
 }
 
 function renderPage() {
-    // Финальная страница (после последней главы) - без иллюстрации
     const isFinalPage = (currentChapter === CHAPTERS_COUNT && currentPage === totalPages + 1);
     if (isFinalPage) {
         pageContent.innerHTML = '<p class="paragraph">Конец книги</p>';

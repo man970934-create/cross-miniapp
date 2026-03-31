@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KROSS</title>
+<link rel="icon" href="data:image/x-icon;,"> <!-- подавляет запрос favicon -->
 <link rel="stylesheet" href="style.css">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js" onerror="console.warn('Telegram WebApp not available')"></script>
 </head>
 <body class="theme-light">
 
@@ -14,9 +15,7 @@
 <div class="app-container">
   <header class="header" id="mainHeader">
     <div class="title-row">
-      <div class="title">
-        <span>KROSS</span>
-      </div>
+      <div class="title">KROSS</div>
       <div class="header-controls">
         <button class="font-btn" id="fontDecrease">A-</button>
         <button class="font-btn" id="fontIncrease">A+</button>

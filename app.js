@@ -199,29 +199,97 @@ function showTempMessage(text) {
     setTimeout(() => msg.remove(), 1500);
 }
 
-// ---------- Смена главы + аналитика ----------
-if (chapterSelect) {
-    chapterSelect.addEventListener('change', async (e) => {
-        const newChapter = parseInt(e.target.value);
-        if (newChapter !== currentChapter) {
-            currentChapter = newChapter;
-            currentPage = 1;
-            await loadChapter(currentChapter);
-            saveProgressToLocal();
+// ---------- НОВЫЕ ФУНКЦИИ ДЛЯ КНОПОК ----------
 
-            if (window.trackEvent) {
-                window.trackEvent("change_chapter", {
-                    chapter: currentChapter,
-                    page: currentPage
-                });
+// Переключение темы
+function toggleTheme() {
+    body.classList.toggle('theme-light');
+    const theme = body.classList.contains('theme-light') ? 'light' : 'dark';
+    localStorage.setItem('kross_theme', theme);
+}
+
+// Применение размера шрифта
+function applyFontSize() {
+    pageContent.style.fontSize = currentFontSize + 'px';
+}
+
+function increaseFont() {
+    currentFontSize = Math.min(currentFontSize + 2, 28);
+    applyFontSize();
+    localStorage.setItem('kross_fontSize', currentFontSize);
+}
+
+function decreaseFont() {
+    currentFontSize = Math.max(currentFontSize - 2, 12);
+    applyFontSize();
+    localStorage.setItem('kross_fontSize', currentFontSize);
+}
+
+// Управление видимостью заголовка (предполагается наличие элемента с id="header")
+function toggleHeaderVisibility() {
+    const header = document.getElementById('header');
+    if (header) {
+        header.style.display = (header.style.display === 'none') ? 'block' : 'none';
+    }
+}
+
+function showHeader() {
+    const header = document.getElementById('header');
+    if (header) {
+        header.style.display = 'block';
+    }
+}
+
+// ---------- ОБРАБОТЧИКИ СОБЫТИЙ ----------
+function bindEventListeners() {
+    if (prevBtn) prevBtn.addEventListener('click', prevPage);
+    if (nextBtn) nextBtn.addEventListener('click', nextPage);
+    if (saveProgressBtn) saveProgressBtn.addEventListener('click', saveProgressToLocal);
+    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+    if (fontIncrease) fontIncrease.addEventListener('click', increaseFont);
+    if (fontDecrease) fontDecrease.addEventListener('click', decreaseFont);
+    if (toggleHeaderBtn) toggleHeaderBtn.addEventListener('click', toggleHeaderVisibility);
+    if (showHeaderBtn) showHeaderBtn.addEventListener('click', showHeader);
+
+    if (chapterSelect) {
+        chapterSelect.addEventListener('change', async (e) => {
+            const newChapter = parseInt(e.target.value);
+            if (newChapter !== currentChapter) {
+                currentChapter = newChapter;
+                currentPage = 1;
+                await loadChapter(currentChapter);
+                saveProgressToLocal();
+
+                if (window.trackEvent) {
+                    window.trackEvent("change_chapter", {
+                        chapter: currentChapter,
+                        page: currentPage
+                    });
+                }
             }
-        }
-    });
+        });
+    }
+}
+
+// Восстановление сохранённых настроек при загрузке
+function loadSettingsFromStorage() {
+    const savedTheme = localStorage.getItem('kross_theme');
+    if (savedTheme === 'light') {
+        body.classList.add('theme-light');
+    }
+
+    const savedFont = localStorage.getItem('kross_fontSize');
+    if (savedFont) {
+        currentFontSize = parseInt(savedFont, 10);
+        applyFontSize();
+    }
 }
 
 // ---------- INIT ----------
 (async function init() {
     initChapterSelect();
     await loadIllustrations();
+    loadSettingsFromStorage();
+    bindEventListeners();
     loadChapter(currentChapter);
 })();

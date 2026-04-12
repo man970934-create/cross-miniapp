@@ -52,23 +52,19 @@ async function loadChapterFromFile(chapterNumber) {
     }
 }
 
-// ---------- Инициализация селекта глав (8-я глава – "Дополнительная глава") ----------
+// ---------- Инициализация селекта глав ----------
 function initChapterSelect() {
     chapterSelect.innerHTML = '';
     for (let i = 1; i <= CHAPTERS_COUNT; i++) {
         const option = document.createElement('option');
         option.value = i;
-        if (i === 8) {
-            option.textContent = 'Дополнительная глава';
-        } else {
-            option.textContent = `Глава ${i}`;
-        }
+        option.textContent = (i === 8) ? 'Дополнительная глава' : `Глава ${i}`;
         chapterSelect.appendChild(option);
     }
     chapterSelect.value = currentChapter;
 }
 
-// ---------- Разбивка на страницы с кэшем ----------
+// ---------- Разбивка на страницы ----------
 let pagesCache = {};
 
 function splitIntoPages(paragraphs, maxChars) {
@@ -102,14 +98,9 @@ async function loadChapter(chapter) {
     updateNavButtons();
 }
 
-// ---------- Экранирование HTML ----------
+// ---------- HTML ----------
 function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 function renderPage() {
@@ -127,12 +118,15 @@ function renderPage() {
     const pageText = pages[currentPage - 1] || '';
     const paragraphs = pageText.split('\n\n').filter(p => p.trim().length > 0);
     let html = '';
+
     if (currentPage === 1 && illustrations[currentChapter]) {
         html += `<img src="images/${illustrations[currentChapter]}?v=${Date.now()}" style="width:100%;max-width:420px;display:block;margin:0 auto 20px auto;">`;
     }
+
     paragraphs.forEach(p => {
         html += `<p class="paragraph">${escapeHtml(p)}</p>`;
     });
+
     pageContent.innerHTML = html;
     pageIndicator.textContent = `${currentPage} / ${totalPages + 1}`;
     pageContainer.scrollTop = 0;
@@ -144,6 +138,7 @@ function updateNavButtons() {
     nextBtn.disabled = currentPage >= lastPage;
 }
 
+// ---------- НАВИГАЦИЯ + АНАЛИТИКА ----------
 function nextPage() {
     const lastPage = (currentChapter === CHAPTERS_COUNT) ? totalPages + 1 : totalPages;
     if (currentPage < lastPage) {
@@ -161,7 +156,23 @@ function nextPage() {
     }
 }
 
-// ---------- Сохранение прогресса ----------
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+        updateNavButtons();
+        saveProgressToLocal();
+
+        if (window.trackEvent) {
+            window.trackEvent("prev_page", {
+                chapter: currentChapter,
+                page: currentPage
+            });
+        }
+    }
+}
+
+// ---------- Сохранение ----------
 function saveProgressToLocal() {
     const progress = {
         currentChapter,
@@ -169,119 +180,26 @@ function saveProgressToLocal() {
         theme: body.classList.contains('theme-light') ? 'light' : 'dark',
         fontSize: currentFontSize
     };
+
     localStorage.setItem('kross_progress', JSON.stringify(progress));
-    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.CloudStorage) {
-        Telegram.WebApp.CloudStorage.setItem('kross_progress', JSON.stringify(progress), (ok) => {
-            if (!ok) console.warn('CloudStorage save failed');
-        });
+
+    if (window.Telegram?.WebApp?.CloudStorage) {
+        Telegram.WebApp.CloudStorage.setItem('kross_progress', JSON.stringify(progress), () => {});
     }
+
     showTempMessage('Прогресс сохранён');
 }
 
-function loadProgressFromStorage() {
-    let saved = null;
-    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.CloudStorage) {
-        Telegram.WebApp.CloudStorage.getItem('kross_progress', (err, value) => {
-            if (!err && value) {
-                try { saved = JSON.parse(value); } catch(e) {}
-                if (saved) applyProgress(saved);
-                else fallbackLocal();
-            } else fallbackLocal();
-        });
-    } else {
-        fallbackLocal();
-    }
-    function fallbackLocal() {
-        const local = localStorage.getItem('kross_progress');
-        if (local) {
-            try { saved = JSON.parse(local); } catch(e) {}
-            if (saved) applyProgress(saved);
-        }
-    }
-}
-
-function applyProgress(progress) {
-    if (progress.currentChapter && progress.currentChapter >= 1 && progress.currentChapter <= CHAPTERS_COUNT) {
-        currentChapter = progress.currentChapter;
-        chapterSelect.value = currentChapter;
-    }
-    if (progress.currentPage && progress.currentPage > 0) currentPage = progress.currentPage;
-    if (progress.theme === 'dark') {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        themeToggle.textContent = '☀️ Дневная';
-    } else {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        themeToggle.textContent = '🌙 Ночная';
-    }
-    if (progress.fontSize && progress.fontSize >= 12 && progress.fontSize <= 24) {
-        currentFontSize = progress.fontSize;
-        document.body.style.fontSize = currentFontSize + 'px';
-    }
-    loadChapter(currentChapter).then(() => {
-        if (currentPage > totalPages) currentPage = totalPages;
-        renderPage();
-        updateNavButtons();
-    });
-}
-
+// ---------- UI ----------
 function showTempMessage(text) {
     const msg = document.createElement('div');
     msg.textContent = text;
-    msg.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:white; padding:8px 16px; border-radius:30px; font-size:14px; z-index:1000;';
+    msg.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:black; color:white; padding:8px 16px; border-radius:30px;';
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 1500);
 }
 
-// ---------- Скрытие/показ шапки ----------
-if (toggleHeaderBtn && showHeaderBtn) {
-    toggleHeaderBtn.addEventListener('click', () => {
-        document.body.classList.add('header-hidden');
-        showHeaderBtn.style.display = 'block';
-    });
-    showHeaderBtn.addEventListener('click', () => {
-        document.body.classList.remove('header-hidden');
-        showHeaderBtn.style.display = 'none';
-    });
-}
-
-// ---------- Смена темы ----------
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        if (body.classList.contains('theme-light')) {
-            body.classList.remove('theme-light');
-            body.classList.add('theme-dark');
-            themeToggle.textContent = '☀️ Дневная';
-        } else {
-            body.classList.remove('theme-dark');
-            body.classList.add('theme-light');
-            themeToggle.textContent = '🌙 Ночная';
-        }
-        saveProgressToLocal();
-    });
-}
-
-// ---------- Изменение шрифта ----------
-function changeFontSize(delta) {
-    let newSize = currentFontSize + delta;
-    if (newSize < 12) newSize = 12;
-    if (newSize > 24) newSize = 24;
-    if (newSize !== currentFontSize) {
-        currentFontSize = newSize;
-        document.body.style.fontSize = currentFontSize + 'px';
-        saveProgressToLocal();
-    }
-}
-if (fontDecrease) fontDecrease.addEventListener('click', () => changeFontSize(-2));
-if (fontIncrease) fontIncrease.addEventListener('click', () => changeFontSize(2));
-
-// ---------- Кнопка сохранения ----------
-if (saveProgressBtn) {
-    saveProgressBtn.addEventListener('click', () => saveProgressToLocal());
-}
-
-// ---------- Смена главы ----------
+// ---------- Смена главы + аналитика ----------
 if (chapterSelect) {
     chapterSelect.addEventListener('change', async (e) => {
         const newChapter = parseInt(e.target.value);
@@ -290,27 +208,20 @@ if (chapterSelect) {
             currentPage = 1;
             await loadChapter(currentChapter);
             saveProgressToLocal();
+
+            if (window.trackEvent) {
+                window.trackEvent("change_chapter", {
+                    chapter: currentChapter,
+                    page: currentPage
+                });
+            }
         }
     });
 }
 
-// ---------- Навигация ----------
-if (prevBtn) prevBtn.addEventListener('click', prevPage);
-if (nextBtn) nextBtn.addEventListener('click', nextPage);
-
-// ---------- Telegram WebApp ----------
-const tg = window.Telegram?.WebApp;
-if (tg) {
-    tg.expand();
-    tg.ready();
-    tg.BackButton.onClick(() => {
-        if (tg.close) tg.close();
-    });
-}
-
-// ---------- Инициализация ----------
+// ---------- INIT ----------
 (async function init() {
     initChapterSelect();
     await loadIllustrations();
-    loadProgressFromStorage();
+    loadChapter(currentChapter);
 })();

@@ -328,9 +328,31 @@ if (nextBtn) nextBtn.addEventListener('click', nextPage);
 
 // ---------- Telegram WebApp ----------
 const tg = window.Telegram?.WebApp;
+
 if (tg) {
     tg.expand();
     tg.ready();
+
+    // 👉 применяем тему Telegram
+    function applyTelegramTheme() {
+        const isDark = tg.colorScheme === "dark";
+
+        if (isDark) {
+            body.classList.remove('theme-light');
+            body.classList.add('theme-dark');
+            themeToggle.textContent = '☀️ Дневная';
+        } else {
+            body.classList.remove('theme-dark');
+            body.classList.add('theme-light');
+            themeToggle.textContent = '🌙 Ночная';
+        }
+    }
+
+    applyTelegramTheme();
+
+    // 👉 слушаем изменения темы Telegram
+    tg.onEvent('themeChanged', applyTelegramTheme);
+
     tg.BackButton.onClick(() => {
         if (tg.close) tg.close();
     });

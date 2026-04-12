@@ -259,3 +259,14 @@ body.theme-dark .page-container::-webkit-scrollbar-thumb {
         font-size: 0.8rem;
     }
 }
+
+/* фикс для Telegram WebApp */
+body.theme-dark {
+    background-color: #4a2c1a !important;
+    color: #f0e0c0 !important;
+}
+
+body.theme-light {
+    background-color: #f5f0e6 !important;
+    color: #3e2e1f !important;
+}

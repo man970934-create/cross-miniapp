@@ -151,15 +151,13 @@ function nextPage() {
         renderPage();
         updateNavButtons();
         saveProgressToLocal();
-    }
-}
 
-function prevPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        renderPage();
-        updateNavButtons();
-        saveProgressToLocal();
+        if (window.trackEvent) {
+            window.trackEvent("next_page", {
+                chapter: currentChapter,
+                page: currentPage
+            });
+        }
     }
 }
 

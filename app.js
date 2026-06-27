@@ -15,6 +15,17 @@ const PARTS_CONFIG = {
         bonusChapter: 9,
         firstChapterDisplayNumber: 8,      // Часть 2 начинается с "Главы 8" (продолжение нумерации)
         filePrefix: 'part2_'                // Файлы: chapters/part2_chapter1.txt, part2_chapter2.txt, ...
+    },
+    3: {
+        chaptersCount: 13,
+        firstChapterDisplayNumber: 16,      // Часть 3 начинается с "Главы 16" (продолжение нумерации)
+        filePrefix: 'part3_',                // Файлы: chapters/part3_chapter1.txt, part3_chapter2.txt, ...
+        // Главы 1–10 -> Главы 16–25 (сквозная нумерация), 11–13 — особые главы/эпилоги
+        specialChapters: {
+            11: 'Дополнительная глава: DL team',
+            12: 'Эпилог первый',
+            13: 'Эпилог второй'
+        }
     }
 };
 
@@ -109,7 +120,9 @@ function initChapterSelect() {
     for (let i = 1; i <= cfg.chaptersCount; i++) {
         const option = document.createElement('option');
         option.value = i;
-        if (i === cfg.bonusChapter) {
+        if (cfg.specialChapters && cfg.specialChapters[i]) {
+            option.textContent = cfg.specialChapters[i];
+        } else if (i === cfg.bonusChapter) {
             option.textContent = 'Дополнительная глава';
         } else {
             // Учитываем сквозную нумерацию (для части 2 главы начинаются с "Глава 8")
@@ -245,7 +258,8 @@ let progressState = {
     currentPart: 1,
     parts: {
         1: { chapter: 1, page: 1 },
-        2: { chapter: 1, page: 1 }
+        2: { chapter: 1, page: 1 },
+        3: { chapter: 1, page: 1 }
     },
     theme: 'light',
     fontSize: 16
@@ -309,7 +323,8 @@ function migrateProgress(progress) {
                     chapter: progress.currentChapter,
                     page: progress.currentPage || 1
                 },
-                2: { chapter: 1, page: 1 }
+                2: { chapter: 1, page: 1 },
+                3: { chapter: 1, page: 1 }
             },
             theme: progress.theme || 'light',
             fontSize: progress.fontSize || 16
@@ -323,7 +338,7 @@ function applyProgress(rawProgress) {
 
     // Восстанавливаем глобальный progressState с подстраховкой по дефолтам
     progressState = {
-        currentPart: (progress.currentPart === 2 ? 2 : 1),
+        currentPart: ([2, 3].includes(progress.currentPart) ? progress.currentPart : 1),
         parts: {
             1: {
                 chapter: (progress.parts && progress.parts[1] && progress.parts[1].chapter) || 1,
@@ -332,6 +347,10 @@ function applyProgress(rawProgress) {
             2: {
                 chapter: (progress.parts && progress.parts[2] && progress.parts[2].chapter) || 1,
                 page:    (progress.parts && progress.parts[2] && progress.parts[2].page)    || 1
+            },
+            3: {
+                chapter: (progress.parts && progress.parts[3] && progress.parts[3].chapter) || 1,
+                page:    (progress.parts && progress.parts[3] && progress.parts[3].page)    || 1
             }
         },
         theme: progress.theme === 'dark' ? 'dark' : 'light',
